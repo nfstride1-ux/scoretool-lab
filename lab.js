@@ -192,12 +192,20 @@ const RULES={
  ASA:{t:'ASA (Archery Shooters Association)',rows:[['12 ring (lower 12 is in play)','12'],['10 ring (5-inch circle inside the 8)','10'],['8 ring','8'],['Body','5'],['Miss','0']],head:['Area','Points'],
   notes:['The upper 12 counts only when the shooter calls it before shooting. Then the lower 12 scores 10 on that target.','The 14 ring (upper rear of the 8) is only used in special events such as pro shoot-downs.','Targets are Delta McKenzie with the ASA Pro 12-ring.'],
   src:[['ASA scoring images','https://asaarchery.com/rules/scoring-images/'],['ASA scoring system','https://asaarchery.com/about-asa/'],['ASA Pro/Am Rules 2026','https://asaarchery.com/rules/asa-pro-am-rules/']]}};
-E.lab_rules=function(){const k=S._rules||'ABA',R=RULES[k];
+E.lab_rules=function(){const k=S._rules||'ABA',R=RULES[k],F=(window.RULES_DATA||{})[k];
  app.innerHTML=`<div class="labseg" role="group" aria-label="Organisation">${Object.keys(RULES).map(x=>`<button data-r="${x}" aria-pressed="${x==k}">${x}</button>`).join('')}</div>
- <div class="card"><span class="kicker">Scoring</span><h2>${h(R.t)}</h2>
- <table class="labtbl"><thead><tr>${R.head.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${R.rows.map(r=>`<tr>${r.map((c,i)=>i?`<td><b>${c}</b></td>`:`<th>${h(c)}</th>`).join('')}</tr>`).join('')}</tbody></table>
- <ul>${R.notes.map(x=>`<li>${h(x)}</li>`).join('')}</ul>
- <p class="labsrc">Sources: ${R.src.map(s=>`<a href="${s[1]}" target="_blank" rel="noopener">${h(s[0])}</a>`).join(' · ')}. Always check the event's own rules on the day.</p></div>
+ <div class="card"><span class="kicker">Scoring at a glance</span><h2>${h(R.t)}</h2>
+ <table class="labtbl"><thead><tr>${R.head.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${R.rows.map(r=>`<tr>${r.map((c,i)=>i?`<td><b>${c}</b></td>`:`<th>${h(c)}</th>`).join('')}</tr>`).join('')}</tbody></table></div>
+ ${F?`<div class="card"><span class="kicker">Full rules · plain English</span><h2>${h(F.doc)}</h2>
+ ${F.note?`<p class="small muted">${h(F.note)}</p>`:''}
+ <label for="rsq">Find a rule</label><input id="rsq" type="search" placeholder="e.g. bounce, line, let down, range finder" autocomplete="off">
+ <p class="small muted" id="rscount" aria-live="polite">${F.sections.length} sections. Tap one to open it.</p>
+ <div id="rslist">${F.sections.map((x,n)=>`<details class="rsec" data-t="${h((x[0]+' '+x[1]+' '+x[2].join(' ')).toLowerCase())}"><summary><b>${h(x[0])}</b></summary><ul>${x[2].map(t=>`<li>${h(t)}</li>`).join('')}</ul><p class="labsrc">Source: ${h(F.doc)}, ${h(x[1])}</p></details>`).join('')}</div>
+ <p class="lab-note">Always check the event's own rules on the day. This is a plain-English summary; the official document wins if anything differs.</p>
+ <p class="labsrc">Documents: ${F.links.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener">${h(l[0])}</a>`).join(' · ')}<br>Last checked: ${h(window.RULES_CHECKED||'')}</p></div>`:''}
  <div class="card"><span class="kicker">Coming soon</span><p class="small muted" style="margin:0">Pictures of each target's rings, and links from archerycalendars.com 3D events to these pages.</p></div>`;
- bar('3D scoring & rules','tools','Tools');app.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{S._rules=b.dataset.r;save();render()})};
+ bar('3D scoring & rules','tools','Tools');app.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{S._rules=b.dataset.r;save();render()});
+ const q=$('#rsq');if(q)q.oninput=()=>{const v=q.value.trim().toLowerCase(),L=[...app.querySelectorAll('.rsec')];let n=0;
+  L.forEach(d=>{const m=!v||v.split(/\s+/).every(w=>d.dataset.t.includes(w));d.hidden=!m;d.open=!!v&&m;if(m)n++});
+  $('#rscount').textContent=v?(n?`${n} section${n==1?'':'s'} match "${q.value.trim()}"`:`Nothing matches "${q.value.trim()}". Try another word.`):`${L.length} sections. Tap one to open it.`}};
 })();

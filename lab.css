@@ -46,3 +46,7 @@ select,input,textarea{background:#fff;color:var(--ink);border-color:#94a3b8}
 .lrow.me{background:#e8f0ff}.tipcard[open]{background:#fff}.t-none{background:#e2e8f0;color:#1e293b}
 @media (max-width:520px){.logo{font-size:22px}.top{padding:10px 12px}.lab-pill{font-size:11px;white-space:nowrap}.labme{padding:6px 10px}}
 .top .logo{white-space:nowrap}
+.rsec{border:1px solid var(--line);border-radius:12px;margin:0 0 8px;background:#fff}
+.rsec summary{cursor:pointer;padding:12px 14px;min-height:48px;list-style-position:inside}
+.rsec[open] summary{border-bottom:1px solid var(--line);background:var(--blue-bg)}
+.rsec ul{margin:10px 0 4px;padding:0 16px 0 34px}.rsec li{margin:0 0 6px}.rsec .labsrc{padding:0 14px 10px;margin:0}
