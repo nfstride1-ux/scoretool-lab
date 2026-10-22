@@ -118,9 +118,11 @@ function analysis(){const all=(window._anShoots?_anShoots():[]).filter(s=>s.ends
 function bindAnalysis(){const r=$('#anr');if(r)r.onchange=()=>{S.anRound=r.value.replace(/ \(\d+\)$/,'');save();rerender()};
  const b=$('#antgs');if(b)b.onclick=()=>{const v=parseInt($('#antg').value);const rd=$('#anr').value.replace(/ \(\d+\)$/,'');S.targets=S.targets||{};if(v>0)S.targets[rd]=v;else delete S.targets[rd];save();rerender()};
  const c=$('#gpch');if(c)c.onclick=ev=>{ev.preventDefault();S.hand=hand()=='L'?'R':'L';save();rerender()}}
-function rerender(){const y=scrollY;stats();scrollTo(0,y)}
+function rerender(){const y=scrollY;render();scrollTo(0,y)}/* TEST VERSION: render() redraws whichever screen is open (Stats or Full analysis) */
 const _st=stats;stats=function(){_st.apply(this,arguments);if($('#ansec'))return;const go=$('#goan'),html=`<div id="ansec"><h2 class="sec" style="margin:18px 4px 6px;border-bottom:3px solid ${G};padding-bottom:4px">Analysis</h2>${analysis()}<h2 class="sec" style="margin:22px 4px 6px;border-bottom:3px solid ${G};padding-bottom:4px">Group patterns</h2>${patternCard()}</div>`;
  if(go)go.insertAdjacentHTML('afterend',html);else app.insertAdjacentHTML('afterbegin',html);bindAnalysis()};
+/* TEST VERSION: the Stats redesign replaced stats(), so this section stopped showing; Full analysis (lab.js) draws it */
+window.labAnalysisHTML=()=>`<h2 class="sec" style="margin:18px 4px 6px;border-bottom:3px solid ${G};padding-bottom:4px">Analysis</h2>${analysis()}<h2 class="sec" style="margin:22px 4px 6px;border-bottom:3px solid ${G};padding-bottom:4px">Group patterns</h2>${patternCard()}`;window.labBindAnalysis=bindAnalysis;
 /* coach data: full pattern + causes */
 const _ct=coachText;coachText=function(){let t=_ct.apply(this,arguments);const rows=patternData();if(!rows)return t;const L=rows[rows.length-1],c=causes(L.dir),strip=x=>x.replace(/<[^>]+>/g,'');
  const add=['','GROUP PATTERN (latest plotted round)',`- ${L.s.date} ${L.s.round}: group centre ${L.dir=='centre'||L.dir=='loose'?DIRNAME[L.dir]:Math.round(L.off)+'mm '+DIRNAME[L.dir]}, ${plN(L.p.length,'arrow','arrows')}, ${hand()=='L'?'left':'right'}-handed${age()!=null&&age()<16?' (under 16: causes shown to coach only)':''}`,'  Possible form and timing causes:',...c.f.map(x=>'  • '+strip(x)),'  Possible tuning causes:',...c.t.map(x=>'  • '+strip(x))];

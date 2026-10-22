@@ -607,7 +607,7 @@ function officialCharts(real){const ok=real.filter(r=>!r.incomplete&&r.score>0);
    Outdoor only: each open tournament/QRE round is 72+ arrows with at least 30 arrows at the listed minimum distance or longer.
    The rules make no distinction between state and national ranking events for classifications (both count as open tournament/QRE). */
 const EV_NEED=[3,3,3,1,1,0,0,0,0,0];
-const LV_COL={'Elite Gold':'#d4af37','Elite Silver':'#c0c7d1','Elite Bronze':'#cd7f32','Grand Master':'#1e3a8a','Master':'#0ea5e9','Gold':'#ffd84d','Red':'#d62828','Blue':'#2563eb','Black':'#111','White':'#fff'};
+const LV_COL={'Elite Gold':'#d4af37','Elite Silver':'#c0c7d1','Elite Bronze':'#cd7f32','Grand Master':'#1e3a8a','Master':'#0369a1','Gold':'#ffd84d','Red':'#d62828','Blue':'#2563eb','Black':'#111','White':'#fff'};
 const EV_LABEL={club:'Club shoot',open:'Open/registered tournament',state:'State ranking/championship',national:'National ranking event'};
 function evType(r){const k='e:'+normDate(r.date)+'|'+r.round,o=(S.evOver||{})[k];if(o)return o;const n=r.event||'';
  return/\bQRE\b|world record status|national/i.test(n)?'national':/state\b.*(championship|titles|ranking)|state ranking/i.test(n)?'state':/\bopen\b|tournament|\bcup\b|classic|trophy/i.test(n)?'open':'club'}

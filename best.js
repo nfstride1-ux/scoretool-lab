@@ -4,7 +4,7 @@
 (function(){
 let BS=null;
 const isMe=()=>{const p=String(S.profile||'').toLowerCase();return p.includes('stride')&&p.includes('nath')};
-fetch('data/my_scoresheets.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{BS=j;if(typeof view!='undefined'&&view=='stats'&&$('#bscard'))stats()}).catch(()=>{});
+fetch('data/my_scoresheets.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{BS=j;if(typeof view!='undefined'&&(view=='stats'||view=='lab_analysis')&&$('#bscard'))render()}).catch(()=>{});
 const BOW=d=>(String(d||'').match(/Compound|Recurve|Longbow|Barebow/i)||['Other'])[0].replace(/^./,c=>c.toUpperCase());
 const DISC=['Outdoor','Indoor','Field','Clout'],DN={Outdoor:'Outdoor target',Indoor:'Indoor',Field:'Field',Clout:'Clout'};
 /* Archer's Diary round -> ScoreTool round with the same ends (for Ghost match). 1440s shot in 3-arrow ends at 50/30 m are paired into 6s. */
@@ -60,7 +60,7 @@ window.bestCard=function(){if(!BS||!isMe())return'';const bow=curBow();if(!bow)r
  <h3 style="margin:12px 0 6px">End by end</h3>${endsHTML(s)}
  ${g.full.length>1?`<h3 style="margin:12px 0 6px">My top ${Math.min(5,g.full.length)} on ${esc(s.rd)}</h3>${g.full.slice(0,5).map((x,i)=>`<button type="button" class="bs-row ${x===s?'on':''}" data-bsp="${esc(x.d+'|'+x.sc)}"><span class="bs-rk">${i+1}</span><span class="bs-rs"><b>${x.sc}</b> · ${fmt(x.d)}<br><span class="small muted">${esc(x.ev)}</span></span><span class="small muted">${x.ds.length?'ends ›':'total only'}</span></button>`).join('')}`:''}
  </div>`};
-window.bindBest=function(){const c=$('#bscard');if(!c)return;const re=()=>{const y=c.getBoundingClientRect().top;stats();const n=$('#bscard');if(n)scrollBy(0,n.getBoundingClientRect().top-y)};
+window.bindBest=function(){const c=$('#bscard');if(!c)return;const re=()=>{const y=c.getBoundingClientRect().top;render();const n=$('#bscard');if(n)scrollBy(0,n.getBoundingClientRect().top-y)};
  const sel=$('#bssel');if(sel)sel.onchange=()=>{window._bsRd=sel.value;window._bsPick=null;re()};
  c.querySelectorAll('[data-bsb]').forEach(b=>b.onclick=()=>{window._bsBow=b.dataset.bsb;window._bsRd=null;window._bsPick=null;re()});
  c.querySelectorAll('[data-bsp]').forEach(b=>b.onclick=()=>{window._bsPick=b.dataset.bsp;re()});
@@ -70,4 +70,5 @@ window.bindBest=function(){const c=$('#bscard');if(!c)return;const re=()=>{const
 const _og=window.offGhost;window.offGhost=function(appRound){const p=window._bsGhost;if(p&&p.rd==appRound){const s=entries().find(x=>x.d+'|'+x.sc==p.key&&GHOST_MAP[x.rd]==appRound),E=s&&ghostEnds(s,appRound);
   if(E)return{mode:'off',src:'off',ends:E.map(e=>e.reduce((t,a)=>t+v(a),0)),ar:E.map(e=>e.slice()),pos:null,date:fmt(s.d),ev:s.ev}}return _og(appRound)};
 const _st=stats;stats=function(){_st.apply(this,arguments);if($('#bscard'))return;const h=bestCard();if(!h)return;const go=$('#goan');if(go)go.insertAdjacentHTML('afterend',h);else app.insertAdjacentHTML('afterbegin',h);bindBest()};
+window.labBestCard=bestCard;/* TEST VERSION: for Full analysis */
 })();

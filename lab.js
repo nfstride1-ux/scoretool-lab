@@ -20,7 +20,9 @@ function sub(id,sec,title,back,backLbl,base,test,after){LABSEC[id]=sec;E[id]=fun
 const _nav=nav;nav=function(v){_nav(v);const s=secOf(view);document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v==s))};
 
 /* top bar: Me button */
-function addMe(){const t=document.querySelector('.top');if(!t||t.querySelector('.labme'))return;const b=document.createElement('button');b.className='labme';b.textContent='Me';b.setAttribute('aria-label','Me and settings');b.onclick=()=>nav('lab_me');const hb=t.querySelector('.help-btn');hb?t.insertBefore(b,hb):t.appendChild(b)}
+function addMe(){const t=document.querySelector('.top');if(!t||t.querySelector('.labme'))return;const b=document.createElement('button');b.className='labme';b.textContent='Me';b.setAttribute('aria-label','Me and settings');b.onclick=()=>nav('lab_me');const hb=t.querySelector('.help-btn');hb?t.insertBefore(b,hb):t.appendChild(b);const tb=document.createElement('button');tb.className='labtheme';tb.onclick=()=>setTheme(curTheme()=='dark'?'light':'dark');t.insertBefore(tb,b);setTheme(curTheme())}
+function curTheme(){return document.documentElement.getAttribute('data-theme')=='dark'?'dark':'light'}
+function setTheme(t){localStorage.setItem('labTheme',t);document.documentElement.setAttribute('data-theme',t);const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t=='dark'?'#0b0f17':'#ffffff';document.querySelectorAll('.labtheme').forEach(b=>{b.textContent=t=='dark'?'☀️':'🌙';b.title=t=='dark'?'Switch to light mode':'Switch to dark mode';b.setAttribute('aria-label',b.title)})}
 setTimeout(addMe,0);setTimeout(addMe,800);
 
 /* ---------- Home: a few big buttons ---------- */
@@ -49,6 +51,7 @@ setInterval(()=>{try{if(typeof cur!=='undefined'&&cur&&!cur.bow&&typeof curBow==
 /* ---------- My archery ---------- */
 LABSEC.myarch='myarch';
 E.myarch=()=>menu('My archery',[
+ row('lab_analysis','🔬','Full analysis','Analysis read, group patterns, best scores, stats detail and trends'),
  row('lab_latest','⭐','Latest shoot','How your last shoot went, wins of the day, notes'),
  row('stats','📈','Stats & PBs','Pick a round: last shoot, trend, personal bests, history'),
  row('analytics','📊','Analytics','Trends across shoots, distances, 10+X rate'),
@@ -82,7 +85,6 @@ E.clubs=()=>menu('Clubs & leagues',[
 sub('lab_leagues','clubs','Leagues','clubs','Clubs',SC,e=>e.id=='lgcard');
 sub('lab_match','clubs','Match play','clubs','Clubs',SC,e=>e.id=='h2hcard');
 sub('lab_group','clubs','Group score card','clubs','Clubs',SC,e=>e.id=='pgcard');
-const _follow=E.follow;if(_follow)E.follow=function(){_follow();if(view=='follow'){keep((e,t)=>!/^SQUADS/.test(t));bar('Following','clubs','Clubs')}};
 LABSEC.lab_squad='clubs';
 const SQT=[['board','Board',t=>/WEEKLY LEAGUE|MORE BOARDS/.test(t)],['activity','Activity',t=>/ACTIVITY/.test(t)],['people','People',t=>/COACHES & PARENTS|ME IN THIS SQUAD|ADMIN ONLY/.test(t)],['manage','Create / join',t=>/CREATE ANOTHER SQUAD|SAFE SQUADS/.test(t)]];
 E.lab_squad=function(){squad();const n=app.children.length,tab=S._labsq||'board',T=SQT.find(x=>x[0]==tab)||SQT[0];
@@ -98,7 +100,7 @@ E.lab_me=()=>menu('Me',[
  row('lab_settings','⚙️','Settings & help','Settings, linked apps, help guides')]);
 sub('lab_profile','me','Profile & card','lab_me','Me',()=>me(),(e,t)=>['nmcard'].includes(e.id)||e.classList.contains('pcard')||/^BADGES|MY BEST MOMENTS/.test(t));
 sub('lab_people','me','Coaches & parents','lab_me','Me',()=>me(),e=>['pxcard','coachcard','parentcard'].includes(e.id));
-sub('lab_settings','me','Settings & help','lab_me','Me',()=>me(),(e,t)=>['settingscard','oapps'].includes(e.id)||/^HELP|^TESTER|RESET MY TEST DATA/.test(t));
+sub('lab_settings','me','Settings & help','lab_me','Me',()=>me(),(e,t)=>['settingscard','oapps'].includes(e.id)||/^HELP|^TESTER|RESET MY TEST DATA/.test(t),()=>{const t=curTheme();app.insertAdjacentHTML('afterbegin',`<div class="card" id="themecard"><span class="kicker">Appearance</span><h2>Light or dark</h2><div class="labseg" role="group" aria-label="Theme"><button data-th="light" aria-pressed="${t=='light'}">☀️ Light</button><button data-th="dark" aria-pressed="${t=='dark'}">🌙 Dark</button></div><p class="small muted" style="margin:0">Also on the sun/moon button at the top. Target faces keep their real colours in both.</p></div>`);app.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{setTheme(b.dataset.th);render()})});
 
 /* ---------- Tools ---------- */
 LABSEC.tools='tools';
@@ -145,7 +147,7 @@ E.lab_opt=function(){S.tune=S.tune||[];const mine=S.tune.filter(t=>t.archer==S.p
  <table class="labtbl"><thead><tr><th></th><th>Arrows</th><th>Avg spread</th><th>Widest</th><th>Centre</th></tr></thead><tbody>${line(one?'● Group':'● Before',B)}${one?'':line('■ After',A)}</tbody></table>
  ${cmp}<p class="small muted">Tap where each arrow landed. Avg spread = twice the average distance from the group centre. Widest = the two furthest-apart arrows. Sizes use the ${h(T.face)} face.</p>
  <label for="tnote">Note</label><textarea id="tnote" rows="2">${h(T.note||'')}</textarea></div></div></div>`;
- bar('Arrow optimizer','tools','Tools');
+ bar('Tuning session','lab_opt','Arrow optimizer');
  const sv=$('#tface');sv.onclick=e=>{const r=sv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*2.1-1.05,y=(e.clientY-r.top)/r.height*2.1-1.05;(one||g=='before'?T.before:T.after).push([+x.toFixed(3),+y.toFixed(3)]);save();render()};
  app.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{T.grp=b.dataset.g;save();render()});
  $('#tun').onclick=()=>{(one||g=='before'?T.before:T.after).pop();save();render()};
@@ -208,4 +210,37 @@ E.lab_rules=function(){const k=S._rules||'ABA',R=RULES[k],F=(window.RULES_DATA||
  const q=$('#rsq');if(q)q.oninput=()=>{const v=q.value.trim().toLowerCase(),L=[...app.querySelectorAll('.rsec')];let n=0;
   L.forEach(d=>{const m=!v||v.split(/\s+/).every(w=>d.dataset.t.includes(w));d.hidden=!m;d.open=!!v&&m;if(m)n++});
   $('#rscount').textContent=v?(n?`${n} section${n==1?'':'s'} match "${q.value.trim()}"`:`Nothing matches "${q.value.trim()}". Try another word.`):`${L.length} sections. Tap one to open it.`}};
+
+/* ---------- Full analysis: everything from the testers' Stats in one place ---------- */
+LABSEC.lab_analysis='myarch';
+E.lab_analysis=function(){let bc='',an='';try{bc=window.labBestCard&&labBestCard()||''}catch(e){}try{an=window.labAnalysisHTML?labAnalysisHTML():''}catch(e){an='<div class="card"><p class="small">The analysis could not be built from this data.</p></div>'}
+ app.innerHTML=`<div class="card"><span class="kicker">Everything in one place</span><p class="small" style="margin:0 0 10px">Built from your Archer's Diary results and rounds scored here. Real results only.</p><div class="row" style="gap:8px;flex-wrap:wrap;justify-content:flex-start"><button class="btn ghost" id="anstats">📈 Stats &amp; PBs, with More detail</button><button class="btn ghost" data-go="analytics">📊 Analytics: trends across shoots</button></div></div>${bc}${an}`;
+ bar('Full analysis','myarch','My archery');$('#anstats').onclick=()=>{S.statsMore=true;save();nav('stats')};if(window.labBindAnalysis)labBindAnalysis();if(window.bindBest)bindBest()};
+
+/* ---------- Back buttons: every screen below a section names its parent and goes there (works on a direct load) ---------- */
+const TOP=new Set(['home','score','myarch','clubs','tools']);
+const PAR={stats:['Stats & PBs','myarch','My archery'],analytics:['Analytics','myarch','My archery'],badges:['Badge collection','lab_season','Season & badges'],recap:['Monthly recap','lab_season','Season & badges'],
+ follow:['Following','clubs','Clubs'],profile:['Edit my card','lab_profile','Profile & card'],help:['Help','lab_settings','Settings & help'],suggest:['Suggest a change','lab_settings','Settings & help'],lab_me:['Me','home','Home']};
+Object.assign(LABSEC,{lab_analysis:'myarch'});
+const ALIAS=v=>v=='squad'?'lab_squad':v=='me'?'lab_settings':v=='diary'?'lab_diary':v=='rewards'?(view=='profile'?'lab_profile':'lab_season'):v;
+const known=v=>['home','score','stats','diary','me','squad'].includes(v)||typeof (window.EXTRA_VIEWS||{})[v]=='function';
+function inner(){if(view=='lab_leagues'&&window._lgv)return['Leagues',()=>{window._lgv=null;window._lgE=null;nav('lab_leagues')}];
+ if(view=='lab_opt'&&S._tuneId&&(S.tune||[]).some(t=>t.id==S._tuneId))return['Arrow optimizer',()=>{S._tuneId=null;save();nav('lab_opt')}];return null}
+function scoringCtl(){if($('#labfl'))return;const t=app.querySelector('.ad-title');
+ const fin=isDone(cur)||(!!cur.finished&&arrowsIn(cur)>0);
+ if(!t){/* ABA 3D scorer: card layout, so a normal top bar */const lb=fin?'‹ Score':'Finish later';app.insertAdjacentHTML('afterbegin',`<div class="labbar"><button class="btn ghost labback" id="labfl"${fin?'':' title="Every target is already saved. Carry on later from Score or Home."'}>${lb}</button><h1>${fin?'Score sheet':'Scoring'}</h1></div>`)}else t.insertAdjacentHTML('afterbegin',fin?'<button class="labfl" id="labfl" aria-label="Close this score sheet and go to Score">‹ Score</button>':'<button class="labfl" id="labfl" title="Every arrow is already saved. Carry on later from Score or Home.">Finish later</button>');
+ $('#labfl').onclick=()=>{if(!fin&&!arrowsIn(cur))S.sessions=S.sessions.filter(x=>x!==cur);fix=null;sv='sheet';justDone=false;cur=null;save();nav('score')}}
+function ensureBack(){try{if(typeof TESTER=='undefined'||!TESTER||!S.unlocked||!S.profile||/^#(share|coach)=/.test(location.hash)||$('#tabs').hidden)return;
+ if(view=='score'){if(typeof cur!='undefined'&&cur)scoringCtl();return}
+ if(TOP.has(view))return;const inn=inner();let b=app.querySelector(':scope>.labbar');
+ if(!b){const p=PAR[view];if(!p)return;bar(p[0],p[1],p[2]);b=app.querySelector(':scope>.labbar')}
+ let k=b.querySelector('.labback');
+ if(!k){const p=PAR[view]||[0,'home','Home'];b.insertAdjacentHTML('afterbegin',`<button class="btn ghost labback" data-go="${p[1]}">‹ ${h(p[2])}</button>`);k=b.firstElementChild;k.onclick=()=>nav(k.dataset.go)}
+ if(inn&&k.dataset.inner!=inn[0]){k.dataset.inner=inn[0];k.textContent='‹ '+inn[0];k.onclick=inn[1]}}catch(e){}}
+let _q=false;new MutationObserver(()=>{if(_q)return;_q=true;queueMicrotask(()=>{_q=false;ensureBack()})}).observe(app,{childList:true,subtree:true});
+/* browser back/forward: each screen has its own address (?p=screen) */
+let popping=false;const _nav3=nav;
+nav=function(v){v=ALIAS(v);_nav3(v);if(!popping){const u=location.pathname+(view=='home'?'':'?p='+view);if(location.pathname+location.search!==u||location.hash)history.pushState({lab:view},'',u)}};
+addEventListener('popstate',()=>{if(typeof cur!='undefined'&&cur&&view=='score')return;const p=new URLSearchParams(location.search).get('p')||'home';if(p!=view&&known(p)){popping=true;try{nav(p)}finally{popping=false}}});
+{const p0=new URLSearchParams(location.search).get('p');if(p0&&p0!='home'&&known(p0)&&!location.hash){popping=true;try{nav(p0)}finally{popping=false}}}
 })();
