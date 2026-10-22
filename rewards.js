@@ -270,4 +270,4 @@ function bindOtherApps(){if(!$('#oapps'))return;const L=S.apps,re=()=>{const c=$
 /* Android share target: manifest sends ?share=1&title=&text=&url= ; save the link and open Me. */
 (function(){const q=new URLSearchParams(location.search);if(!q.has('url')&&!q.has('text'))return;const raw=[q.get('url'),q.get('text'),q.get('title')].filter(Boolean).join(' ');
  const ok=addApp(raw);history.replaceState(null,'',location.pathname);if(ok&&S.unlocked&&S.profile)setTimeout(()=>{nav('me');const c=document.getElementById('oapps');if(c)c.scrollIntoView()},0)})();
-if('serviceWorker' in navigator&&(location.protocol=='https:'||location.hostname=='127.0.0.1'))navigator.Promise.resolve().catch(()=>{});
+/* TEST VERSION: no service worker (keeps this build fully separate from the testers' app). */
