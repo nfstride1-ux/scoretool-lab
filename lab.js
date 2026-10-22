@@ -1,6 +1,5 @@
-/* TEST VERSION layout (22 Oct 2026). Re-groups the existing screens into Home / Score / My archery / Clubs / Tools (+ Me in the top bar)
-   and adds the idea-list tools. Every existing screen is reused as-is (same data, same code); this file only picks which cards show where.
-   Storage is the 'stlab:' space (index.html) and the relay uses its own 'stlab-' topics, so nothing here touches the testers' app. */
+/* Layout (22 Oct 2026, tried first in scoretool-lab). Re-groups the existing screens into Home / Score / My archery / Clubs / Tools (+ Me in the top bar)
+   and adds the idea-list tools. Every existing screen is reused as-is (same data, same code); this file only picks which cards show where. Nothing here renames, rewrites or deletes stored data: new settings only add their own keys or fields. */
 (function(){
 const E=window.EXTRA_VIEWS=window.EXTRA_VIEWS||{};
 const h=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -20,9 +19,10 @@ function sub(id,sec,title,back,backLbl,base,test,after){LABSEC[id]=sec;E[id]=fun
 const _nav=nav;nav=function(v){_nav(v);const s=secOf(view);document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v==s))};
 
 /* top bar: Me button */
-function addMe(){const t=document.querySelector('.top');if(!t||t.querySelector('.labme'))return;const b=document.createElement('button');b.className='labme';b.textContent='Me';b.setAttribute('aria-label','Me and settings');b.onclick=()=>nav('lab_me');const hb=t.querySelector('.help-btn');hb?t.insertBefore(b,hb):t.appendChild(b);const tb=document.createElement('button');tb.className='labtheme';tb.onclick=()=>setTheme(curTheme()=='dark'?'light':'dark');t.insertBefore(tb,b);setTheme(curTheme())}
+function addMe(){const t=document.querySelector('.top');if(!t||t.querySelector('.labme'))return;const b=document.createElement('button');b.className='labme';b.textContent='Me';b.setAttribute('aria-label','Me and settings');b.onclick=()=>nav('lab_me');const hb=t.querySelector('.help-btn');hb?t.insertBefore(b,hb):t.appendChild(b);const tb=document.createElement('button');tb.className='labtheme';tb.onclick=()=>setTheme(curTheme()=='dark'?'light':'dark');t.insertBefore(tb,b);paintTheme(curTheme())}
 function curTheme(){return document.documentElement.getAttribute('data-theme')=='dark'?'dark':'light'}
-function setTheme(t){localStorage.setItem('labTheme',t);document.documentElement.setAttribute('data-theme',t);const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t=='dark'?'#0b0f17':'#ffffff';document.querySelectorAll('.labtheme').forEach(b=>{b.textContent=t=='dark'?'☀️':'🌙';b.title=t=='dark'?'Switch to light mode':'Switch to dark mode';b.setAttribute('aria-label',b.title)})}
+function setTheme(t){localStorage.setItem('scoretool.theme',t);paintTheme(t)}
+function paintTheme(t){document.documentElement.setAttribute('data-theme',t);const m=document.querySelector('meta[name=theme-color]');if(m)m.content=t=='dark'?'#0b0f17':'#ffffff';document.querySelectorAll('.labtheme').forEach(b=>{b.textContent=t=='dark'?'☀️':'🌙';b.title=t=='dark'?'Switch to light mode':'Switch to dark mode';b.setAttribute('aria-label',b.title)})}
 setTimeout(addMe,0);setTimeout(addMe,800);
 
 /* ---------- Home: a few big buttons ---------- */
@@ -46,7 +46,8 @@ score=function(){_score();if((typeof cur!=='undefined'&&cur)||view!='score')retu
  const note=`<p class="small muted" style="margin:6px 0 0">Setup: <b>${b?h(b.name):'none yet'}</b> · <a href="#" data-go="lab_gear">change</a> &nbsp;·&nbsp; Leagues, match play and group cards are in <a href="#" data-go="clubs">Clubs</a></p>`;
  if(first)first.insertAdjacentHTML('beforeend',note);app.querySelectorAll('a[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();nav(a.dataset.go)})};
 /* rounds scored with a setup selected remember it, so setups can be compared */
-setInterval(()=>{try{if(typeof cur!=='undefined'&&cur&&!cur.bow&&typeof curBow=='function'){const b=curBow();if(b)cur.bow=b.id}}catch(e){}},1000);
+const PAGE_T=Date.now(),isNew=x=>x&&+String(x.id||'').slice(1)>=PAGE_T;/* only rounds started after this page opened: old records are never touched */
+setInterval(()=>{try{if(typeof cur!=='undefined'&&cur&&isNew(cur)&&!cur.bow&&typeof curBow=='function'){const b=curBow();if(b)cur.bow=b.id}}catch(e){}},1000);
 
 /* ---------- My archery ---------- */
 LABSEC.myarch='myarch';
@@ -100,7 +101,7 @@ E.lab_me=()=>menu('Me',[
  row('lab_settings','⚙️','Settings & help','Settings, linked apps, help guides')]);
 sub('lab_profile','me','Profile & card','lab_me','Me',()=>me(),(e,t)=>['nmcard'].includes(e.id)||e.classList.contains('pcard')||/^BADGES|MY BEST MOMENTS/.test(t));
 sub('lab_people','me','Coaches & parents','lab_me','Me',()=>me(),e=>['pxcard','coachcard','parentcard'].includes(e.id));
-sub('lab_settings','me','Settings & help','lab_me','Me',()=>me(),(e,t)=>['settingscard','oapps'].includes(e.id)||/^HELP|^TESTER|RESET MY TEST DATA/.test(t),()=>{const t=curTheme();app.insertAdjacentHTML('afterbegin',`<div class="card" id="themecard"><span class="kicker">Appearance</span><h2>Light or dark</h2><div class="labseg" role="group" aria-label="Theme"><button data-th="light" aria-pressed="${t=='light'}">☀️ Light</button><button data-th="dark" aria-pressed="${t=='dark'}">🌙 Dark</button></div><p class="small muted" style="margin:0">Also on the sun/moon button at the top. Target faces keep their real colours in both.</p></div>`);app.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{setTheme(b.dataset.th);render()})});
+sub('lab_settings','me','Settings & help','lab_me','Me',()=>me(),(e,t)=>['settingscard','oapps'].includes(e.id)||/^HELP|^TESTER|RESET MY TEST DATA/.test(t),()=>{const t=curTheme();app.insertAdjacentHTML('afterbegin',`<div class="card" id="themecard"><span class="kicker">Appearance</span><h2>Light or dark</h2><div class="labseg" role="group" aria-label="Theme"><button data-th="light" aria-pressed="${t=='light'}">☀️ Light</button><button data-th="dark" aria-pressed="${t=='dark'}">🌙 Dark</button></div><p class="small muted" style="margin:0">Also on the sun/moon button at the top. Target faces keep their real colours in both.</p></div>`);app.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{setTheme(b.dataset.th);render()});if(window.calCard){$('#themecard').insertAdjacentHTML('afterend',calCard());calBind()}});
 
 /* ---------- Tools ---------- */
 LABSEC.tools='tools';
@@ -229,7 +230,7 @@ function inner(){if(view=='lab_leagues'&&window._lgv)return['Leagues',()=>{windo
 function scoringCtl(){if($('#labfl'))return;const t=app.querySelector('.ad-title');
  const fin=isDone(cur)||(!!cur.finished&&arrowsIn(cur)>0);
  if(!t){/* ABA 3D scorer: card layout, so a normal top bar */const lb=fin?'‹ Score':'Finish later';app.insertAdjacentHTML('afterbegin',`<div class="labbar"><button class="btn ghost labback" id="labfl"${fin?'':' title="Every target is already saved. Carry on later from Score or Home."'}>${lb}</button><h1>${fin?'Score sheet':'Scoring'}</h1></div>`)}else t.insertAdjacentHTML('afterbegin',fin?'<button class="labfl" id="labfl" aria-label="Close this score sheet and go to Score">‹ Score</button>':'<button class="labfl" id="labfl" title="Every arrow is already saved. Carry on later from Score or Home.">Finish later</button>');
- $('#labfl').onclick=()=>{if(!fin&&!arrowsIn(cur))S.sessions=S.sessions.filter(x=>x!==cur);fix=null;sv='sheet';justDone=false;cur=null;save();nav('score')}}
+ $('#labfl').onclick=()=>{if(!fin&&!arrowsIn(cur)&&isNew(cur))S.sessions=S.sessions.filter(x=>x!==cur);fix=null;sv='sheet';justDone=false;cur=null;save();nav('score')}}
 function ensureBack(){try{if(typeof TESTER=='undefined'||!TESTER||!S.unlocked||!S.profile||/^#(share|coach)=/.test(location.hash)||$('#tabs').hidden)return;
  if(view=='score'){if(typeof cur!='undefined'&&cur)scoringCtl();return}
  if(TOP.has(view))return;const inn=inner();let b=app.querySelector(':scope>.labbar');
@@ -240,7 +241,7 @@ function ensureBack(){try{if(typeof TESTER=='undefined'||!TESTER||!S.unlocked||!
 let _q=false;new MutationObserver(()=>{if(_q)return;_q=true;queueMicrotask(()=>{_q=false;ensureBack()})}).observe(app,{childList:true,subtree:true});
 /* browser back/forward: each screen has its own address (?p=screen) */
 let popping=false;const _nav3=nav;
-nav=function(v){v=ALIAS(v);_nav3(v);if(!popping){const u=location.pathname+(view=='home'?'':'?p='+view);if(location.pathname+location.search!==u||location.hash)history.pushState({lab:view},'',u)}};
+nav=function(v){v=ALIAS(v);_nav3(v);if(!popping){const q=new URLSearchParams(location.search);if(view=='home')q.delete('p');else q.set('p',view);const qs=q.toString(),u=location.pathname+(qs?'?'+qs:'');/* keeps ?tester= and any other params */if(location.pathname+location.search!==u||location.hash)history.pushState({lab:view},'',u)}};
 addEventListener('popstate',()=>{if(typeof cur!='undefined'&&cur&&view=='score')return;const p=new URLSearchParams(location.search).get('p')||'home';if(p!=view&&known(p)){popping=true;try{nav(p)}finally{popping=false}}});
 {const p0=new URLSearchParams(location.search).get('p');if(p0&&p0!='home'&&known(p0)&&!location.hash){popping=true;try{nav(p0)}finally{popping=false}}}
 })();

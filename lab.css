@@ -1,4 +1,4 @@
-/* TEST VERSION: light theme + new layout. Loaded after style.css; overrides only. */
+/* light theme (default) + dark theme + new layout. Loaded after style.css; overrides only. */
 :root{--surf:var(--card);--topbg:var(--night);--chip-b:#33435c}
 :root[data-theme=light]{--surf:#fff;--topbg:#fff;--chip-b:#bcd0f5;color-scheme:light;--ink:#0f172a;--ink2:#334155;--muted:#475569;--line:#d6dde8;--bg:#f4f7fb;--card:#fff;--night2:#eef2f7;--blue:#1d4ed8;--blue-bg:#e3ecff;--amber:#7a4b00;--amber-bg:#fff1cc;--green:#14532d;--green-bg:#dcfce7;--cyan:#0e7490;--purple:#1d4ed8;--r-epic:#1d4ed8}
 [data-theme=light] body{background:var(--bg);color:var(--ink)}
@@ -45,7 +45,7 @@
 .btn.ghost{background:var(--blue-bg);color:var(--blue);border:1px solid var(--chip-b)}
 [data-theme=light] .bar{background:#e2e8f0}[data-theme=light] .cheer{background:#fff;border-color:#cbd5e1}[data-theme=light] .cheer[aria-pressed=true]{background:#e0f2fe}[data-theme=light] .cheer.gold[aria-pressed=true]{background:#fff1cc}
 [data-theme=light] .lrow.me{background:#e8f0ff}[data-theme=light] .tipcard[open]{background:#fff}[data-theme=light] .t-none{background:#e2e8f0;color:#1e293b}
-@media (max-width:520px){.logo{font-size:22px}.top{padding:10px 12px}.lab-pill{font-size:11px;white-space:nowrap}.labme{padding:6px 10px}}
+@media (max-width:520px){.logo{font-size:22px}.top{padding:10px 12px}.lab-pill,.demo-pill{font-size:11px;white-space:nowrap}.labme{padding:6px 10px}}
 .top .logo{white-space:nowrap}
 .rsec{border:1px solid var(--line);border-radius:12px;margin:0 0 8px;background:var(--surf)}
 .rsec summary{cursor:pointer;padding:12px 14px;min-height:48px;list-style-position:inside}
@@ -62,9 +62,11 @@
 .labtheme{background:var(--blue-bg);color:var(--blue);border:1px solid var(--chip-b);border-radius:99px;min-width:40px;min-height:36px;font-size:17px;cursor:pointer;margin-right:8px;padding:0 9px}
 .labfl{position:absolute;left:8px;top:50%;transform:translateY(-50%);background:#fff;color:#0f172a;border:1px solid #64748b;border-radius:99px;font:700 13px var(--body);padding:5px 10px;min-height:32px;cursor:pointer}
 .ad-title{position:relative;text-align:center}
+.calprompt{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:40;max-width:520px;margin:0 auto;background:#fff;color:#0f172a;border:2px solid #1d4ed8;border-radius:14px;padding:12px 14px;box-shadow:0 8px 24px rgba(15,23,42,.25);display:flex;flex-direction:column;gap:6px;font-size:15px}
+.calprompt span{font-size:14px;color:#334155}.calprompt .btn{min-height:40px;padding:8px 14px}
 @media print{:root,:root[data-theme]{color-scheme:light;--ink:#000;--ink2:#222;--muted:#333;--bg:#fff;--card:#fff;--surf:#fff;--night:#fff;--night2:#fff;--line:#999;--blue:#1d4ed8}
  body,main,.card,.dark,.dark[style],.top,.labrow,.hub-tile,.rsec,#scroller{background:#fff!important;color:#000!important;box-shadow:none!important}
- .tabs,#tabs,.labtheme,.labme,.help-btn,.labback,.labfl{display:none!important}}
+ .tabs,#tabs,.labtheme,.labme,.help-btn,.labback,.labfl,.calprompt{display:none!important}}
 /* contrast: light mode recolours bright text written for the dark theme (gold, red, green, grey) */
 [data-theme=light]{--r-common:#475569;--r-rare:#1d4ed8;--r-leg:#8a5a00;--r-myth:#b91c1c}
 [data-theme=light] [style*="color:#ffc629"],[data-theme=light] [style*="color:var(--gold)"],[data-theme=light] .bs-sub{color:#8a5a00!important}

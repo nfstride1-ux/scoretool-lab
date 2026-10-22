@@ -70,5 +70,5 @@ window.bindBest=function(){const c=$('#bscard');if(!c)return;const re=()=>{const
 const _og=window.offGhost;window.offGhost=function(appRound){const p=window._bsGhost;if(p&&p.rd==appRound){const s=entries().find(x=>x.d+'|'+x.sc==p.key&&GHOST_MAP[x.rd]==appRound),E=s&&ghostEnds(s,appRound);
   if(E)return{mode:'off',src:'off',ends:E.map(e=>e.reduce((t,a)=>t+v(a),0)),ar:E.map(e=>e.slice()),pos:null,date:fmt(s.d),ev:s.ev}}return _og(appRound)};
 const _st=stats;stats=function(){_st.apply(this,arguments);if($('#bscard'))return;const h=bestCard();if(!h)return;const go=$('#goan');if(go)go.insertAdjacentHTML('afterend',h);else app.insertAdjacentHTML('afterbegin',h);bindBest()};
-window.labBestCard=bestCard;/* TEST VERSION: for Full analysis */
+window.labBestCard=bestCard;/* for Full analysis */
 })();
