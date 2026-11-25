@@ -12,10 +12,10 @@ const SB='https://sllsqpfqwckwtljzjxli.supabase.co';
 const KEY_PUB='sb_publishable_t2g3KYdoGeTtcXTO-URK9g_Nf69SEFq';
 const AUTH='scoretool.stripe.auth',ENT='scoretool.stripe.entitlement';
 const FREE_LIST=['Score card: every round, plotting and saving','Basic stats, personal bests and practice arrows','Setups and sight marks','League scoring'];
-const PLUS_LIST=['Everything in Free','Analysis','Diary','Photos','Group event scoring','Share with a coach'];
+const PLUS_LIST=['Everything in Free','Analysis','Diary','Photos','Group event scoring','Share my data with a coach'];
 const PRO_LIST=['Everything in Plus','My bows and My arrows','Arrow chooser','Tune helper and calculators'];
 const PLANS={
- plus:{name:'Plus',month:['scoretool_plus_month','A$4.99 a month'],year:['scoretool_plus_year','A$49 a year'],line:'Analysis, diary, photos, group scoring and sharing with a coach.'},
+ plus:{name:'Plus',month:['scoretool_plus_month','A$4.99 a month'],year:['scoretool_plus_year','A$49 a year'],line:'Analysis, diary, photos, group scoring and sharing your data with a coach.'},
  pro:{name:'Pro',month:['scoretool_pro_month','A$7.99 a month'],year:['scoretool_pro_year','A$79 a year'],line:'Bows, arrows and the Tune helper, as well as Plus.'}
 };
 const PLUS=new Set(['stats','analytics','lab_analysis','diary','lab_diary','lab_squad','squad','lab_group','lab_coach']);

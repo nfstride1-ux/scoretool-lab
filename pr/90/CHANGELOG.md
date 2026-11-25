@@ -4,6 +4,15 @@ Newest first. Each entry names the version tag shown in Settings.
 
 
 
+## v2026-11-26-0628-coachshare: Coaching rework — one share button, Tools › Coaching — preview only
+- Rework of the unreleased coaching preview (Nathe t1215u, t1216u). Nothing is live until Nathe says go.
+- Archer: the existing My archery › Coach screen now has one button, "Share my data with coach". It creates a link to send (the phone's share sheet, or copy). The archer can stop sharing. Plus and Pro only.
+- This version removes these earlier unreleased coaching screens: Add my coach / Send this code; Share a round; the one-off share sheet and the finished-round footer button; Preview as archer/coach toggles; the Coach card on Me. The coach home is now Tools › Coaching, not a separate hash desk.
+- Coach: the first link still runs one ScoreTool + Archery Calendar sign-up, then the add-to-home-screen how-to. Later links go straight in. The archer's name shows under Tools › Coaching.
+- Tapping the archer's name opens all working analysis (group plot, end by end, heatmap, averages, custom charts, compare), every practice and competition session, every tuning session, and the diary. The coach can add a note to any of those. Notes open and shut so the page stays neat.
+- When the coach leaves a note, the archer sees an in-app notice and a badge on My archery › Coach, and a dropdown of all notes on the Coach page (dated, newest first). A system push is sent only if the phone has already allowed notifications.
+- Plans copy now says "Share my data with a coach". Privacy wording matches the new share button. Contact is still nfshold@gmail.com. League scoring stays free. Lingkana data is not changed.
+
 ## v2026-11-26-0555-coaching: Coaching (Plus & Pro) — preview only
 - Plus and Pro archers can share a one-off link for a round: scores, arrow plots, analysis and that day's diary. The coach opens it without an account.
 - Plus and Pro archers can add a coach with a short code or link. The coach's first code runs one sign-up that covers ScoreTool and Archery Calendar, then the how-to for adding ScoreTool to the phone's home screen. Every later archer code goes straight into the coach's Archers list. The archer can remove the coach at any time, and the link stops straight away.

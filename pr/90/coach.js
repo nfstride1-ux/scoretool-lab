@@ -1,16 +1,18 @@
-/* ScoreTool coaching (26 Nov 2026). Plus/Pro archers can send a one-off share link
-   (scores, plots, analysis and that day's diary; no coach account) or a coach code
-   for an ongoing link. The coach's first code runs one ScoreTool + Archery Calendar
-   sign-up, then the add-to-home-screen how-to; later codes go straight into the
-   Archers list. The archer can remove the coach at any time. Coach view: Archers
-   list, the same analysis with a coach-saved layout, custom charts, and a
-   side-by-side compare. Notes on a round, end or diary entry: tuning (archer logs
-   the change), blank bale / close target drill (diary tick-off), or form / mental.
-   The coach sees everything; the archer can't hide the diary. Goals and training
-   plans are not in this build. Live sync uses supabase/scoretool_coaching.sql,
-   applied only at go-live. This file uses localStorage and URL hashes so the
-   preview works without touching the live database. Colours: royal #1d4ed8 and
-   neon #38e1ff / #5ab0ff. No purple. */
+/* ScoreTool coaching (26 Nov 2026, rework). Plus/Pro archers share from the
+   existing My archery › Coach screen with one button, "Share my data with coach".
+   That creates a link the archer sends (native share sheet, with a copy fallback).
+   They can stop sharing at any time. The coach's first link runs one ScoreTool +
+   Archery Calendar sign-up, then the add-to-home-screen how-to; later links go
+   straight in. The archer's name shows under Tools › Coaching. Tapping the name
+   opens all working analysis, every practice and tuning session, and everything
+   else they record. The coach can add a note to any item; notes open and shut so
+   the page stays neat. The archer gets an in-app notice when a note is left, and
+   a dropdown of all notes (newest first, with dates) on the Coach page. A system
+   push is sent only if the phone has already allowed notifications; this build
+   does not add a new push service. The coach sees everything; the archer can't
+   hide the diary. Goals and training plans are not in this build. Live sync uses
+   supabase/scoretool_coaching.sql, applied only at go-live. Colours: royal
+   #1d4ed8 and neon #38e1ff / #5ab0ff. No purple. */
 (function(){
 const SB='https://sllsqpfqwckwtljzjxli.supabase.co';
 const KEY_PUB='sb_publishable_t2g3KYdoGeTtcXTO-URK9g_Nf69SEFq';
@@ -23,7 +25,8 @@ const K={
  shares:'scoretool.coach.shares',
  me:'scoretool.coach.me',
  demo:'scoretool.coach.demo',
- role:'scoretool.coach.role'
+ role:'scoretool.coach.role',
+ seen:'scoretool.coach.notes.seen'
 };
 const CHARTS=[
  {id:'group',label:'Group plot'},
@@ -181,16 +184,24 @@ function avgsCard(an,label){
 function pl(v){return v==null?'—':Number(v).toFixed(1)}
 
 /* ---------- feed of an archer (for the coach) ---------- */
+function sessKind(s){return (s&&s.src==='paper')?'competition':'practice'}
+function packTune(t){
+ if(!t)return null;
+ const pts=a=>(a||[]).map(p=>Array.isArray(p)?[+p[0],+p[1]]:p);
+ return {id:t.id,date:t.date,name:t.name||t.change||'Tuning',change:t.change||'',dist:t.dist||'',face:t.face||'',bowName:t.bowName||'',note:t.note||'',hand:t.hand||'',before:pts(t.before),after:pts(t.after)}
+}
 function packFeed(){
- if(typeof S==='undefined'||!S)return {name:archerName(),rounds:[],diary:[],updated:Date.now()};
- const rounds=(S.sessions||[]).filter(s=>s&&(s.finished||(typeof isDone==='function'&&isDone(s)))).map(s=>({
+ if(typeof S==='undefined'||!S)return {name:archerName(),rounds:[],tunes:[],diary:[],updated:Date.now()};
+ const hasArrows=s=>s&&(s.finished||(typeof isDone==='function'&&isDone(s))||((s.ends||[]).some(e=>(e||[]).length)));
+ const rounds=(S.sessions||[]).filter(hasArrows).map(s=>({
   id:s.id,date:s.date,round:s.round,score:(typeof total==='function'?total(s):0),
   ends:(s.ends||[]).map(e=>(e||[]).slice()),
   pos:(s.pos||[]).map(e=>(e||[]).map(p=>p&&{x:p.x,y:p.y,s:p.s,g:p.g})),
-  dist:s.dist||s.peg||''
+  dist:s.dist||s.peg||'',kind:sessKind(s)
  }));
+ const tunes=(S.tune||[]).map(packTune).filter(Boolean);
  const diary=(S.diary||[]).map(x=>({id:x.id,date:x.date,text:x.text||''}));
- return {name:archerName(),id:archerId(),rounds,diary,updated:Date.now()}
+ return {name:archerName(),id:archerId(),rounds,tunes,diary,updated:Date.now()}
 }
 function pushFeed(){
  const L=links().filter(x=>x.status==='active'&&x.archerId===archerId());
@@ -258,84 +269,72 @@ function scoreTable(ends){
  return `<table class="ends"><thead><tr><th>End</th><th>Arrows</th><th>Tot</th></tr></thead><tbody>${ends.map((e,i)=>`<tr><td>${i+1}</td><td>${(e||[]).map(a=>esc(a)).join(' ')}</td><td>${(e||[]).reduce((t,a)=>t+valOf(a),0)}</td></tr>`).join('')}</tbody></table>`
 }
 
-/* ---------- archer: share + add a coach ---------- */
+/* ---------- archer: one button in My archery › Coach ---------- */
 function lockHTML(what){
  return `<div class="card" id="coachlock"><span class="kicker">Coach</span><h2>Available on Plus</h2>
  <p>${esc(what)} is on Plus and Pro. League scoring stays free.</p>
  <button class="btn alt full" type="button" data-plans="1">See plans</button></div>`
 }
-function coachArcherCard(){
- if(role()==='coach'&&meCoach()){
-  return `<div class="card" id="coachdeskcard"><span class="kicker">Coach</span><h2>Your archers</h2>
-   <p class="small muted">Open your Archers list to follow scores, plots, analysis and diary, and to leave notes.</p>
-   <button class="btn alt full" id="chdesk" type="button">Open Archers list</button></div>`
+function sharingRows(){return links().filter(x=>x.archerId===archerId()&&(x.status==='pending'||x.status==='active'))}
+function dataLink(row){return appBase().split('#')[0]+'#coachcode='+encodeURIComponent(row.code)}
+function ensureShareRow(){
+ let L=links();
+ let row=L.find(x=>x.archerId===archerId()&&(x.status==='pending'||x.status==='active'));
+ if(!row){
+  row={code:shortCode(),archerId:archerId(),archerName:archerName(),coachId:null,coachName:'',coachEmail:'',status:'pending',created:today(),claimedAt:''};
+  L.push(row);saveLinks(L);
  }
- const L=links().filter(x=>x.archerId===archerId()&&x.status!=='removed');
+ pushFeed();
+ return row
+}
+function coachArcherCard(){
+ if(!canShare())return lockHTML('Share my data with coach');
+ const L=sharingRows();
  const active=L.filter(x=>x.status==='active');
  const pending=L.filter(x=>x.status==='pending');
- if(!canShare())return `<div class="card" id="coachcard">${lockHTML('Sharing with a coach').replace('<div class="card" id="coachlock">','').replace('</div>','')}</div>`;
- return `<div class="card" id="coachcard"><span class="kicker">Coach</span><h2>My coach</h2>
-  ${active.length?active.map(c=>`<div class="list-item row"><span><b>${esc(c.coachName||c.coachEmail||'Coach')}</b><br><span class="small muted">Linked ${esc(c.claimedAt||c.created||'')}</span></span>
-   <button class="btn ghost" data-chrm="${esc(c.code)}" style="padding:6px 12px;min-height:36px">Remove</button></div>`).join(''):'<p class="small muted" id="nocoach">No coach yet.</p>'}
-  ${pending.length?`<p class="small">Waiting for the coach to open this code: <b id="chcode">${esc(pending[0].code)}</b></p>`:''}
-  <button class="btn alt full" id="chadd" type="button" style="margin-top:8px">Add my coach</button>
-  <h3 style="margin-top:14px">Share a round</h3>
-  ${finishedRounds().length?finishedRounds().map(s=>`<div class="list-item row"><span>${esc(s.round||'')} · ${esc(s.date||'')}</span>
-    <button class="btn ghost" data-chsh="${esc(s.id)}" type="button" style="padding:6px 12px;min-height:36px">Share with a coach</button></div>`).join(''):'<p class="small muted">Finish a round, then share it here.</p>'}
-  <p class="small muted" style="margin:8px 0 0">They will see your scores, plots, analysis and diary. You can remove them at any time.</p>
+ const url=window._chShowLink||'';
+ return `<div class="card" id="coachcard"><span class="kicker">Coach</span><h2>Coach</h2>
+  <p>Share your scores, plots, analysis and diary with your coach. Send them one link.</p>
+  <button class="btn alt full" id="chshare" type="button">Share my data with coach</button>
+  ${url?`<div id="chfallback" style="margin-top:10px"><p class="small muted">Copy this link and send it to your coach.</p>
+    <input readonly value="${esc(url)}" id="chlink" aria-label="Coach share link">
+    <button class="btn ghost" id="chcp" type="button" style="margin-top:6px">Copy link</button></div>`:''}
+  ${active.length?active.map(c=>`<div class="list-item row" style="margin-top:12px"><span class="small">Shared with <b>${esc(c.coachName||c.coachEmail||'your coach')}</b></span>
+   <button class="btn ghost" data-chrm="${esc(c.code)}" type="button" style="padding:6px 12px;min-height:36px">Stop sharing</button></div>`).join(''):''}
+  ${!active.length&&pending.length?`<div class="list-item row" style="margin-top:12px"><span class="small muted">Waiting for your coach to open the link.</span>
+   <button class="btn ghost" data-chrm="${esc(pending[0].code)}" type="button" style="padding:6px 12px;min-height:36px">Stop sharing</button></div>`:''}
  </div>`
 }
 window.coachArcherCard=coachArcherCard;
-
 window.bindArcherCard=bindArcherCard;
 function bindArcherCard(){
- const add=$('#chadd');if(add)add.onclick=()=>startAddCoach();
- const desk=$('#chdesk');if(desk)desk.onclick=()=>{setHash('#coach');renderCoachDesk()};
+ const sh=$('#chshare');if(sh)sh.onclick=()=>shareMyData();
+ const cp=$('#chcp');if(cp)cp.onclick=()=>{const url=$('#chlink')&&$('#chlink').value;if(url&&navigator.clipboard)navigator.clipboard.writeText(url);cp.textContent='Copied ✓'};
  app.querySelectorAll('[data-chrm]').forEach(b=>b.onclick=()=>removeCoach(b.dataset.chrm));
- app.querySelectorAll('[data-chsh]').forEach(b=>b.onclick=()=>{const s=finishedRounds().find(x=>String(x.id)===String(b.dataset.chsh));if(s&&window.coachShareRound)coachShareRound(s)});
 }
-function startAddCoach(){
- if(!canShare()){nav('plans');return}
- let L=links();
- let row=L.find(x=>x.archerId===archerId()&&x.status==='pending');
- if(!row){
-  row={code:shortCode(),archerId:archerId(),archerName:archerName(),coachId:null,coachName:'',coachEmail:'',status:'pending',created:today(),claimedAt:''};
-  L.push(row);saveLinks(L);pushFeed();
- }
- const url=appBase().split('#')[0]+'#coachcode='+encodeURIComponent(row.code);
- app.innerHTML=`${demoBanner()}<div class="card" id="chaddcard"><span class="kicker">Add my coach</span><h2>Send this code</h2>
-  <p>Share the code or the link. The first time your coach opens it they sign in once (ScoreTool and Archery Calendar together), then see how to add it to their home screen. After that, each new archer goes straight into their Archers list.</p>
-  <p class="ch-code" id="chcodeshow">${esc(row.code)}</p>
-  <input readonly value="${esc(url)}" id="chlink" aria-label="Coach code link">
-  <div class="row" style="gap:8px;margin-top:8px"><button class="btn alt" id="chcp" type="button">Copy link</button>
-  <button class="btn ghost" id="chback" type="button">Back</button></div></div>`;
- const tabs=document.getElementById('tabs');if(tabs)tabs.hidden=false;
- $('#chcp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(url);$('#chcp').textContent='Copied ✓'};
- $('#chback').onclick=()=>{if(typeof nav==='function')nav('lab_coach');else renderCoachArcherHome()};
+function shareMyData(){
+ if(!canShare()){if(typeof nav==='function')nav('plans');return}
+ const row=ensureShareRow();
+ const url=dataLink(row);
+ const title='ScoreTool — share my data with coach';
+ const text='I\'d like to share my ScoreTool data with you as my coach.';
+ const fallback=()=>{window._chShowLink=url;renderCoachArcherHome()};
+ if(typeof navigator.share==='function'){
+  Promise.resolve(navigator.share({title,text,url})).then(()=>{window._chShowLink=url;if(typeof nav==='function')nav('lab_coach');else renderCoachArcherHome()}).catch(e=>{
+   if(e&&e.name==='AbortError')return;
+   fallback();
+  });
+ }else fallback();
 }
+window.coachEnsureLink=function(){return dataLink(ensureShareRow())};
 function removeCoach(code){
  const L=links();const i=L.findIndex(x=>x.code===code&&x.archerId===archerId());
  if(i<0)return;
- if(!confirm('Remove this coach? They will stop seeing your scores straight away.'))return;
+ if(!confirm('Stop sharing with this coach? They will stop seeing your scores straight away.'))return;
  L[i].status='removed';L[i].removedAt=today();saveLinks(L);
+ window._chShowLink='';
  if(typeof nav==='function')nav('lab_coach');else renderCoachArcherHome();
 }
-
-window.coachShareRound=function(s){
- if(!s)return;
- if(!canShare()){if(typeof nav==='function')nav('plans');return}
- const url=shareUrl(s);
- const tabs=document.getElementById('tabs');if(tabs)tabs.hidden=false;
- app.innerHTML=`${demoBanner()}<div class="card" id="chsharesheet"><span class="kicker">Share with a coach</span><h2>One-off link</h2>
-  <p>This link sends the scores, arrow plots, analysis and that day's diary together. The coach can open it without an account.</p>
-  <p class="small muted">${esc(s.round||'')} · ${esc(s.date||'')} · ${typeof total==='function'?total(s):''}</p>
-  <input readonly value="${esc(url)}" id="chshurl" aria-label="One-off coach share link">
-  <div class="row" style="gap:8px;margin-top:8px"><button class="btn alt" id="chshcp" type="button">Copy link</button>
-  <a class="btn ghost" id="chshprev" href="${esc(url)}">Preview</a>
-  <button class="btn ghost" id="chshback" type="button">Back</button></div></div>`;
- $('#chshcp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(url);$('#chshcp').textContent='Copied ✓'};
- $('#chshback').onclick=()=>{if(typeof score==='function'){if(typeof nav==='function')nav('score')}};
-};
 
 /* ---------- coach code landing ---------- */
 function renderCodeLink(code){
@@ -346,12 +345,13 @@ function renderCodeLink(code){
  const first=!m||!m.signedIn||!m.homescreen;
  if(first){renderFirstJoin(row);return}
  claimArcher(row);
+ history.replaceState(null,'',location.pathname+location.search);
  renderCoachDesk();
 }
 function renderFirstJoin(row){
  const demo=demoOn();
- app.innerHTML=`${demoBanner()}<div class="card" id="chjoin"><span class="kicker">Coach sign-up</span><h1>One sign-up for ScoreTool and Archery Calendar</h1>
-  <p>${esc(row.archerName||'An archer')} sent you a coach code. Sign in once. That same sign-in works on ScoreTool and on Archery Calendar (${esc(CAL.replace(/^https:\/\//,'').replace(/\/$/,''))}).</p>
+ app.innerHTML=`<div class="card" id="chjoin"><span class="kicker">Coach sign-up</span><h1>One sign-up for ScoreTool and Archery Calendar</h1>
+  <p>${esc(row.archerName||'An archer')} shared their ScoreTool data with you. Sign in once. That same sign-in works on ScoreTool and on Archery Calendar (${esc(CAL.replace(/^https:\/\//,'').replace(/\/$/,''))}).</p>
   ${demo?`<button class="btn alt full" id="chdemoin" type="button">Continue as demo coach</button>`:
   `<button class="btn alt full" id="chgoauth" type="button">Continue with Google</button>
    <p class="small muted" id="chjoinmsg">Apple sign-in is added once Apple activates the developer account.</p>`}
@@ -374,8 +374,8 @@ function finishFirstJoin(row,me){
  renderHomeHowTo(row);
 }
 function renderHomeHowTo(row){
- app.innerHTML=`${demoBanner()}<div class="card" id="chhomehow"><span class="kicker">Add to Home Screen</span><h1>Keep ScoreTool on your phone</h1>
-  <p>Add ScoreTool to your home screen so your Archers list is one tap away.</p>
+ app.innerHTML=`<div class="card" id="chhomehow"><span class="kicker">Add to Home Screen</span><h1>Keep ScoreTool on your phone</h1>
+  <p>Add ScoreTool to your home screen so Tools › Coaching is one tap away.</p>
   <ol class="ch-steps">
    <li>Tap the <b>Share</b> button at the bottom of Safari (the square with the arrow).</li>
    <li>Scroll and tap <b>Add to Home Screen</b>.</li>
@@ -383,11 +383,13 @@ function renderHomeHowTo(row){
   </ol>
   <p class="small muted">On Android: open the browser menu and tap Add to Home screen.</p>
   <p>Archery Calendar uses the same sign-in. You can add that app the same way at <a href="${CAL}" target="_blank" rel="noopener">archerycalendars.com</a>.</p>
-  <button class="btn alt full" id="chhomedone" type="button">I've added it, show my Archers</button>
+  <button class="btn alt full" id="chhomedone" type="button">I've added it, open Coaching</button>
  </div>`;
  $('#chhomedone').onclick=()=>{
   const m=meCoach()||{};m.homescreen=true;m.signedIn=true;setMeCoach(m);
-  claimArcher(row);setHash('#coach');renderCoachDesk();
+  claimArcher(row);
+  history.replaceState(null,'',location.pathname+location.search);
+  if(typeof nav==='function')nav('lab_coaching');else renderCoachDesk();
  };
 }
 function claimArcher(row){
@@ -403,27 +405,23 @@ function claimArcher(row){
  L[i].claimedAt=today();
  saveLinks(L);
  /* If the archer's feed is not on this phone, keep the name so the list still shows. */
- if(!feedOf(L[i].archerId))store('scoretool.coach.feed.'+L[i].archerId(),{name:L[i].archerName,id:L[i].archerId,rounds:[],diary:[],updated:Date.now(),pending:true});
+ if(!feedOf(L[i].archerId))store('scoretool.coach.feed.'+L[i].archerId,{name:L[i].archerName,id:L[i].archerId,rounds:[],tunes:[],diary:[],updated:Date.now(),pending:true});
 }
 
 /* ---------- coach desk ---------- */
 function renderCoachDesk(){
  const tabs=document.getElementById('tabs');if(tabs)tabs.hidden=false;
- const m=meCoach();
- if(!m||!m.signedIn){app.innerHTML=`${demoBanner()}<div class="card" id="chdeskneed"><span class="kicker">Coach</span><h2>Sign in to see your archers</h2><p>Open a coach code from an archer to create your coach account.</p></div>`;return}
  const A=activeArchers();
  window._chView='desk';
- app.innerHTML=`${demoBanner()}<div class="card dark" id="chdesk"><span class="kicker">Coach</span><h1>Archers</h1>
-  <p class="small">Every archer who sent you a code. You see their scores, plots, analysis and diary. They can't hide the diary.</p></div>
+ app.innerHTML=`<div class="card dark" id="chdesk"><span class="kicker">Tools · Coaching</span><h1>Coaching</h1>
+  <p class="small">Archers who have shared their data with you. You see their scores, plots, analysis and diary. They can't hide the diary.</p></div>
  ${A.length?A.map(a=>`<div class="card list-item" data-cha="${esc(a.archerId)}" id="cha-${esc(a.archerId)}" style="cursor:pointer">
    <div class="row" style="justify-content:space-between;align-items:center"><span><b>${esc((a.feed&&a.feed.name)||a.archerName||'Archer')}</b>
     ${a.isNew?'<span class="ch-new">New</span>':''}<br>
     <span class="small muted">${a.last?`${esc(a.last.round)} · ${esc(a.last.date)} · ${a.last.score}`:'No rounds yet'}</span></span>
     <span class="stat" style="min-width:72px"><b>${a.avg?a.avg.toFixed(0):'—'}</b><span class="small muted">${trendLabel(a.trend)}</span></span>
-   </div></div>`).join(''):'<div class="card"><p class="small muted" id="chaempty">No archers yet. When an archer sends you a code, they show up here.</p></div>'}
- <div class="card"><button class="btn ghost full" id="chswitch" type="button">Back to my own ScoreTool</button></div>`;
+   </div></div>`).join(''):'<div class="card"><p class="small muted" id="chaempty">No archers yet. When an archer shares their data with you, their name shows up here.</p></div>'}`;
  app.querySelectorAll('[data-cha]').forEach(b=>b.onclick=()=>{setHash('#coacher='+encodeURIComponent(b.dataset.cha));renderCoachArcher(b.dataset.cha)});
- const sw=$('#chswitch');if(sw)sw.onclick=()=>{setRole('archer');setHash('');if(typeof nav==='function')nav('home')};
 }
 function trendLabel(t){if(!t)return 'even';return t>0?('up '+Math.round(t)):'down '+Math.round(Math.abs(t))}
 
@@ -434,11 +432,44 @@ function filterRounds(rounds,L){
  const n=L.compareN||5;
  return R.slice(-n)
 }
+function fmtNoteDate(n){
+ const d=(n&&n.at)||'', ts=n&&n.atTime;
+ try{const dt=ts?new Date(ts):(d?new Date(d+'T12:00:00'):null);
+  if(dt&&!isNaN(+dt))return dt.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}catch(e){}
+ return d||''
+}
+function typeLabel(n){return ((NOTE_TYPES.find(t=>t.id===(n&&n.type))||{}).label)||(n&&n.type)||'Note'}
+function itemLabel(n){
+ if(!n)return '';
+ if(n.kind==='tune')return 'Tuning session';
+ if(n.kind==='diary')return 'Diary';
+ if(n.kind==='end')return 'End';
+ if(n.kind==='round')return (n.itemLabel||'Session');
+ return n.kind||'Item'
+}
+function tunePlot(t){
+ const B=t&&t.before||[],A=t&&t.after||[],cx=100,cy=100,R=90;
+ let g=`<svg class="ch-plot" viewBox="0 0 200 200" role="img" aria-label="Tuning plot">`;
+ for(let i=10;i>=1;i--)g+=`<circle cx="${cx}" cy="${cy}" r="${((i/10)*R).toFixed(1)}" fill="${i>=9?'#ffd84d':(i%2?'#fff':'#f3f3f3')}" stroke="#94a3b8" stroke-width="0.6"/>`;
+ B.forEach(p=>{const x=cx+(+p[0]||0)*R,y=cy+(+p[1]||0)*R;g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${ROYAL}" stroke="#fff" stroke-width="1"/>`});
+ A.forEach(p=>{const x=cx+(+p[0]||0)*R,y=cy+(+p[1]||0)*R;g+=`<rect x="${(x-3).toFixed(1)}" y="${(y-3).toFixed(1)}" width="6" height="6" fill="#111" stroke="#fff" stroke-width="1"/>`});
+ return g+'</svg>'
+}
+function notesFold(kind,id){
+ const L=notesFor(kind,id);
+ const n=L.length;
+ return `<details class="ch-fold ch-itemnotes"${n?' open':''}><summary>Notes${n?` · ${n}`:''}</summary>
+  ${L.map(noteHTML).join('')||'<p class="small muted">None yet.</p>'}
+  <button class="btn ghost" data-chnadd="${esc(kind)}" data-chnon="${esc(id)}" type="button">Add a note</button>
+  <div class="chnslot" hidden></div></details>`
+}
+function sessKindLabel(r){return (r&&r.kind==='competition')?'Competition':'Practice'}
+
 function renderCoachArcher(aid){
  window._chArcher=aid;
  const row=activeArchers().find(x=>x.archerId===aid);
  const tabs=document.getElementById('tabs');if(tabs)tabs.hidden=false;
- if(!row){app.innerHTML=`${demoBanner()}<div class="card"><h2>That archer is not in your list</h2><button class="btn ghost" id="chbackd" type="button">Back to Archers</button></div>`;const b=$('#chbackd');if(b)b.onclick=()=>{setHash('#coach');renderCoachDesk()};return}
+ if(!row){app.innerHTML=`<div class="card"><h2>That archer is not in your list</h2><button class="btn ghost" id="chbackd" type="button">Back to Coaching</button></div>`;const b=$('#chbackd');if(b)b.onclick=()=>{setHash('');if(typeof nav==='function')nav('lab_coaching');else renderCoachDesk()};return}
  markSeen(aid);
  const L=layoutOf();
  const rounds=filterRounds(row.feed.rounds||[],L);
@@ -450,7 +481,7 @@ function renderCoachArcher(aid){
  const name=(row.feed&&row.feed.name)||row.archerName||'Archer';
  const chartHtml=drawLayout(L,ses,an,row,rounds);
  const diary=(row.feed.diary||[]).slice().sort((a,b)=>a.date<b.date?1:-1);
- app.innerHTML=`${demoBanner()}<div class="card dark" id="charcher"><button class="btn ghost labback" id="chbackd" type="button">‹ Archers</button>
+ app.innerHTML=`<div class="card dark" id="charcher"><button class="btn ghost labback" id="chbackd" type="button">‹ Coaching</button>
   <span class="kicker">Coach view</span><h1>${esc(name)}</h1>
   <p class="small muted">You see everything they record, including the diary. They can't hide it. Your layout never changes their screen.</p></div>
  <div class="card" id="chfilters"><span class="kicker">Layout</span>
@@ -480,20 +511,40 @@ function renderCoachArcher(aid){
   <button class="btn alt" id="chcrun" type="button" style="margin-top:8px">Compare</button>
   <div id="chcbox"></div>
  </div>
- <div class="card" id="chnotes"><span class="kicker">Coach notes</span><h2>Pin a note</h2>
-  ${ses?noteForm('round',ses.id,name):'<p class="small muted">Open a round to pin a note on it.</p>'}
-  ${ses&&ses.ends&&ses.ends.length?`<label for="chend">Or on an end</label><select id="chend">${ses.ends.map((_,i)=>`<option value="${i}">End ${i+1}</option>`).join('')}</select>
+ <div class="card" id="chsessions"><span class="kicker">Sessions</span><h2>Practice and scoring</h2>
+  <p class="small muted">Every practice and competition session. Open one to see the card and add a note.</p>
+  ${(row.feed.rounds||[]).slice().sort((a,b)=>a.date<b.date?1:-1).map(r=>`<details class="ch-fold" id="chsess-${esc(r.id)}" ${r.id===pick?'open':''}>
+    <summary><b>${esc(fmtNoteDate({at:r.date}))}</b> · ${esc(r.round||'Round')} · ${r.score} <span class="small muted">${esc(sessKindLabel(r))}</span></summary>
+    ${scoreTable(r.ends)}${plotSVG(r.pos,analyse(r.ends,r.pos))}
+    ${r.ends&&r.ends.length?`<label class="small muted">Note an end</label><div class="row" style="gap:6px;flex-wrap:wrap"><select data-chendof="${esc(r.id)}">${r.ends.map((_,i)=>`<option value="${i}">End ${i+1}</option>`).join('')}</select>
+     <button class="btn ghost" data-chnend="${esc(r.id)}" type="button">Add a note</button></div>`:''}
+    ${notesFold('round',r.id)}
+   </details>`).join('')||'<p class="small muted">No sessions yet.</p>'}
+ </div>
+ <div class="card" id="chtunes"><span class="kicker">Tuning sessions</span><h2>All tuning</h2>
+  <p class="small muted">Every tuning session they have recorded. ● fletched or before, ■ bare or after.</p>
+  ${(row.feed.tunes||[]).slice().sort((a,b)=>a.date<b.date?1:-1).map(u=>`<details class="ch-fold" id="chtune-${esc(u.id)}">
+    <summary><b>${esc(fmtNoteDate({at:u.date}))}</b> · ${esc(u.name||u.change||'Tuning')} <span class="small muted">${esc([u.change,u.dist,u.face].filter(Boolean).join(' · '))}</span></summary>
+    ${tunePlot(u)}
+    ${u.note?`<p class="small">${esc(u.note)}</p>`:''}
+    ${notesFold('tune',u.id)}
+   </details>`).join('')||'<p class="small muted">No tuning sessions yet.</p>'}
+ </div>
+ <div class="card" id="chnotes"><span class="kicker">Coach notes</span><h2>Add a note</h2>
+  <p class="small muted">You can also add a note on any session, end, tuning session or diary entry below. Notes open and shut so the page stays neat.</p>
+  ${ses?noteForm('round',ses.id,name):'<p class="small muted">Open a session to pin a note on it.</p>'}
+  ${ses&&ses.ends&&ses.ends.length?`<label for="chend">Or on an end of this session</label><select id="chend">${ses.ends.map((_,i)=>`<option value="${i}">End ${i+1}</option>`).join('')}</select>
    <button class="btn ghost" id="chnend" type="button">Note this end</button>`:''}
  </div>
  <div class="card" id="chdiary"><span class="kicker">Diary</span><h2>${esc(name)}'s diary</h2>
   <p class="small muted">The coach sees everything. There is no way for the archer to hide the diary.</p>
-  ${diary.length?diary.map(d=>`<div class="list-item" id="chd-${esc(d.id||d.date)}"><div class="small muted">${esc(d.date)}</div><div>${esc(d.text||'')}</div>
-    <button class="btn ghost" data-chndiary="${esc(d.id||d.date)}" type="button" style="margin-top:6px">Note this entry</button>
-    ${notesFor('diary',d.id||d.date).map(noteHTML).join('')}
-   </div>`).join(''):'<p class="small muted">No diary entries yet.</p>'}
- </div>
- ${ses?`<div class="card"><h3>Notes on this round</h3>${notesFor('round',ses.id).map(noteHTML).join('')||'<p class="small muted">None yet.</p>'}</div>`:''}`;
- const back=$('#chbackd');if(back)back.onclick=()=>{setHash('#coach');renderCoachDesk()};
+  ${diary.length?diary.map((d,i)=>`<details class="ch-fold" id="chd-${esc(d.id||d.date)}"${i===0?' open':''}>
+    <summary><b>${esc(fmtNoteDate({at:d.date}))}</b></summary>
+    <p>${esc(d.text||'')}</p>
+    ${notesFold('diary',d.id||d.date)}
+   </details>`).join(''):'<p class="small muted">No diary entries yet.</p>'}
+ </div>`;
+ const back=$('#chbackd');if(back)back.onclick=()=>{setHash('');if(typeof nav==='function')nav('lab_coaching');else renderCoachDesk()};
  bindLayout(aid,L);
  const pickEl=$('#chpick');if(pickEl)pickEl.onchange=()=>{window._chRound=pickEl.value;renderCoachArcher(aid)};
  const cu=$('#chcuadd');if(cu)cu.onclick=()=>{
@@ -504,7 +555,23 @@ function renderCoachArcher(aid){
  const run=$('#chcrun');if(run)run.onclick=()=>runCompare();
  const nf=$('#chnsave');if(nf)nf.onclick=()=>saveNoteFromForm('round',ses&&ses.id);
  const ne=$('#chnend');if(ne)ne.onclick=()=>saveNoteFromForm('end',(ses&&ses.id)+':'+($('#chend')?$('#chend').value:'0'));
- app.querySelectorAll('[data-chndiary]').forEach(b=>b.onclick=()=>{window._chNoteTarget={kind:'diary',id:b.dataset.chndiary};paintInlineNote(b)});
+ app.querySelectorAll('[data-chnend]').forEach(b=>b.onclick=()=>{
+  const sel=app.querySelector(`[data-chendof="${b.dataset.chnend}"]`);
+  saveNoteFromForm('end',b.dataset.chnend+':'+(sel?sel.value:'0'));
+ });
+ app.querySelectorAll('[data-chnadd]').forEach(b=>b.onclick=()=>{
+  const slot=b.parentNode&&b.parentNode.querySelector('.chnslot');
+  if(!slot)return;
+  slot.hidden=false;slot.innerHTML=noteForm(b.dataset.chnadd,b.dataset.chnon,name);
+  const typ=slot.querySelector('#chntype'),hint=slot.querySelector('#chnhint'),sv=slot.querySelector('#chnsave');
+  if(typ)typ.id='';if(hint)hint.id='';if(sv){sv.id='';sv.onclick=()=>{
+   const body=(slot.querySelector('textarea')&&slot.querySelector('textarea').value||'').trim();
+   const type=(slot.querySelector('select')&&slot.querySelector('select').value)||'form';
+   if(!body)return;
+   pushNote({kind:b.dataset.chnadd,target:b.dataset.chnon,type,body});
+   renderCoachArcher(aid);
+  }};
+ });
  bindNoteReplies();
 }
 function Aother(){return activeArchers()}
@@ -568,14 +635,14 @@ function bindLayout(aid,L){
 
 /* ---------- notes ---------- */
 function notesFor(kind,id){return notes().filter(n=>n.kind===kind&&String(n.target)===String(id)&&n.status!=='removed')}
-function noteHTML(n){
+function noteHTML(n,open){
  const typ=NOTE_TYPES.find(t=>t.id===n.type)||{label:n.type};
- return `<div class="list-item ch-note" data-chnid="${esc(n.id)}"><div class="small muted">${esc(typ.label)} · ${esc(n.at||'')}</div>
+ return `<details class="ch-fold ch-note" data-chnid="${esc(n.id)}"${open?' open':''}><summary><span class="small muted">${esc(fmtNoteDate(n))}</span> · ${esc(typ.label)}${n.kind&&n.kind!=='round'?` · ${esc(itemLabel(n))}`:''}</summary>
   <div>${esc(n.body||'')}</div>
   ${n.type==='tuning'?`<label>What I changed</label><textarea data-chreply="${esc(n.id)}" rows="2" placeholder="The archer logs the change here">${esc(n.reply||'')}</textarea>
     <button class="btn ghost" data-chrsave="${esc(n.id)}" type="button">Save change</button>`:''}
   ${n.type==='drill'?`<label class="small" style="display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" data-chdrill="${esc(n.id)}" ${n.done?'checked':''} style="width:auto;margin:0"> Drill done</label>`:''}
- </div>`
+ </details>`
 }
 function noteForm(kind,id,who){
  return `<div id="chnform"><label for="chntype">Type</label>
@@ -584,13 +651,22 @@ function noteForm(kind,id,who){
   <label for="chnbody">Note</label><textarea id="chnbody" rows="3" placeholder="Write a note ${who?'for '+who:''}"></textarea>
   <button class="btn alt" id="chnsave" type="button" style="margin-top:8px">Pin note</button></div>`
 }
+function maybeNotify(title,body){
+ try{if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  new Notification(title,{body:body||''})}catch(e){}
+}
+function pushNote(opts){
+ const L=notes();
+ const n={id:uid('n'),coachId:coachId(),archerId:opts.archerId||window._chArcher||rowArcher()||(activeArchers()[0]||{}).archerId,kind:opts.kind,target:opts.target,type:opts.type||'form',body:opts.body,reply:'',done:false,at:today(),atTime:Date.now(),status:'active'};
+ L.push(n);saveNotes(L);
+ maybeNotify('Your coach left a note', (n.body||'').slice(0,80));
+ return n
+}
 function saveNoteFromForm(kind,id){
  const body=($('#chnbody')&&$('#chnbody').value||'').trim();
  if(!body||!id)return;
  const type=($('#chntype')&&$('#chntype').value)||'form';
- const L=notes();
- L.push({id:uid('n'),coachId:coachId(),archerId:(window._chArcher||(rowArcher())||(activeArchers()[0]||{}).archerId),kind,target:id,type,body,reply:'',done:false,at:today(),status:'active'});
- saveNotes(L);
+ pushNote({kind,target:id,type,body});
  const h=location.hash||'';
  if(h.startsWith('#coacher='))renderCoachArcher(decodeURIComponent(h.slice(9)));
 }
@@ -639,19 +715,6 @@ function paintDiary(){
 }
 function paintScore(){
  const s=typeof cur!=='undefined'?cur:null;
- if(!s||!s.finished){
-  const btn=$('#shcoach');if(btn)return;
- }
- const foot=document.querySelector('.ad-foot');
- if(foot&&!$('#shcoach')){
-  const b=document.createElement('button');
-  b.className='ad-fin';b.id='shcoach';b.type='button';b.textContent='Share with a coach';
-  foot.appendChild(b);b.onclick=()=>{
-   const sess=typeof cur!=='undefined'?cur:null;
-   if(!canShare()){if(typeof nav==='function')nav('plans');return}
-   if(sess&&window.coachShareRound)coachShareRound(sess);
-  };
- }
  if(!s||!s.id)return;
  if($('#chnotescore'))$('#chnotescore').remove();
  const list=archerNotes().filter(n=>(n.kind==='round'&&n.target===s.id)||(n.kind==='end'&&String(n.target).startsWith(s.id+':')));
@@ -663,29 +726,71 @@ function paintScore(){
 }
 
 /* ---------- archer home (lab_coach) ---------- */
+function seenMap(){return load(K.seen,{})||{}}
+function unreadNotes(){const seen=seenMap();return archerNotes().filter(n=>n&&n.id&&!seen[n.id])}
+function markNotesSeen(ids){
+ const seen=seenMap();
+ (ids||archerNotes().map(n=>n.id)).forEach(id=>{if(id)seen[id]=1});
+ store(K.seen,seen);
+}
+function allNotesSorted(){return archerNotes().slice().sort((a,b)=>{
+ const tb=b.atTime||0,ta=a.atTime||0;if(tb!==ta)return tb-ta;
+ return String(b.at||'').localeCompare(String(a.at||''))
+})}
+function notesDropdownHTML(){
+ const L=allNotesSorted(),u=unreadNotes().length;
+ if(!L.length&&!u)return '';
+ return `<div class="card" id="challnotesbox">
+  ${u?`<p class="ch-alert" id="chnalert">Your coach left ${u} new note${u===1?'':'s'}.</p>`:''}
+  <label for="challnotes">All notes</label>
+  <select id="challnotes" aria-label="View all notes">
+   <option value="">View all notes (${L.length})</option>
+   ${L.map(n=>`<option value="${esc(n.id)}">${esc(fmtNoteDate(n))} · ${esc(typeLabel(n))} · ${esc((n.body||'').slice(0,48))}</option>`).join('')}
+  </select>
+  <div id="chnoteview">${L.map(n=>noteHTML(n,false)).join('')}</div>
+ </div>`
+}
+function bindNotesDropdown(){
+ const sel=$('#challnotes'), view=$('#chnoteview');
+ if(!sel)return;
+ const open=()=>{
+  markNotesSeen();
+  const alert=$('#chnalert');if(alert)alert.remove();
+  const id=sel.value;
+  if(view)[...view.querySelectorAll('[data-chnid]')].forEach(el=>{el.open=(!id||el.getAttribute('data-chnid')===id)});
+  paintMenuBadge();
+ };
+ sel.onchange=open;sel.addEventListener('focus',()=>{if(!sel.value)markNotesSeen();paintMenuBadge()});
+}
+function paintMenuBadge(){
+ const btn=document.querySelector('[data-go="lab_coach"]');
+ if(!btn)return;
+ const n=unreadNotes().length;
+ let b=btn.querySelector('.ch-new');
+ const small=btn.querySelector('small');
+ if(n){
+  if(!b){b=document.createElement('span');b.className='ch-new';(btn.querySelector('span:nth-child(2)')||btn).appendChild(b)}
+  b.textContent=n===1?'1 new note':n+' new notes';
+  if(small)small.textContent='Your coach left notes';
+ }else if(b){b.remove();if(small)small.textContent='Share my data with coach'}
+}
 function renderCoachArcherHome(){
  const tabs=document.getElementById('tabs');if(tabs)tabs.hidden=false;
- app.innerHTML=`${demoBanner()}${canShare()?coachArcherCard():lockHTML('Sharing with a coach')}`;
+ const lock=!canShare();
+ app.innerHTML=(lock?lockHTML('Share my data with coach'):coachArcherCard())+(lock?'':notesDropdownHTML());
  bindArcherCard();
- const typ=$('#chntype');
+ bindNotesDropdown();
+ bindNoteReplies();
 }
 window.EXTRA_VIEWS=Object.assign(window.EXTRA_VIEWS||{},{
- lab_coach:function(){setRole('archer');renderCoachArcherHome()},
- lab_coachdesk:function(){setRole('coach');setHash('#coach');renderCoachDesk()}
+ lab_coach:function(){renderCoachArcherHome()},
+ lab_coaching:function(){renderCoachDesk()},
+ lab_coachdesk:function(){renderCoachDesk()}
 });
 
-/* ---------- demo preview ---------- */
-function demoBanner(){
- if(!demoOn())return '';
- return `<div class="card" id="chdemobar" style="background:#1a2a44;color:#fff"><span class="kicker" style="color:${NEON}">Preview</span>
-  <p style="margin:0 0 8px">This is a test preview. Nothing here is live. Switch below to try the archer and coach screens on this phone. A one-off share link also works on any phone.</p>
-  <div class="row" style="gap:8px"><button class="btn alt" id="chrolea" type="button">Preview as archer</button>
-  <button class="btn ghost" id="chrolec" type="button">Preview as coach</button></div></div>`
-}
-function bindDemoBanner(){
- const a=$('#chrolea');if(a)a.onclick=()=>{setRole('archer');setHash('');if(typeof nav==='function')nav('lab_coach')};
- const c=$('#chrolec');if(c)c.onclick=()=>{const m=meCoach()||{id:'demo-coach',name:'Demo coach',signedIn:true,homescreen:true,demo:true};setMeCoach(m);setRole('coach');setHash('#coach');renderCoachDesk()};
-}
+/* ---------- demo preview (no role-switch banner) ---------- */
+function demoBanner(){return ''}
+function bindDemoBanner(){}
 function seedDemo(){
  if(load('scoretool.coach.demoseed',false))return;
  const aid='u_coachdemo', name='Preview Archer';
@@ -695,28 +800,35 @@ function seedDemo(){
   localStorage.setItem('scoretool.tester',aid);
   localStorage.setItem('scoretool.names.asked','1');
   localStorage.setItem('scoretool.whatsnew.seen','x');
-  localStorage.setItem('scoretool.paid.early',JSON.stringify({ids:[]}));
+  localStorage.setItem('scoretool.paid.early',JSON.stringify({ids:[aid]}));
+  localStorage.setItem('scoretool.stripe.checked',String(Date.now()));
   store('scoretool.stripe.auth',{access_token:'demo-preview',refresh_token:'',email:'preview-coach@example.com'});
   store('scoretool.stripe.entitlement',{valid:true,server:true,tier:'plus',status:'active',current_period_end:'2099-01-01T00:00:00Z',customer_id:'cus_preview'});
  }catch(e){}
  const d1=today();
  const d0=new Date(Date.now()-864e5).toLocaleDateString('en-CA');
- const r1={id:'s_demo1',date:d0,round:'WA 50/720',finished:true,ends:[[10,9,9,8,10,9],[9,9,8,10,10,8]],pos:[[{x:0.08,y:0.04},{x:-0.1,y:0.06},{x:0.02,y:-0.12},{x:0.2,y:0.1},{x:-0.05,y:-0.02},{x:0.12,y:-0.08}],[{x:0.05,y:0.09},{x:-0.07,y:0.01},{x:0.15,y:-0.1},{x:-0.12,y:0.14},{x:0.01,y:0.02},{x:0.09,y:-0.05}]]};
+ const r1={id:'s_demo1',date:d0,round:'WA 50/720',src:'paper',finished:true,ends:[[10,9,9,8,10,9],[9,9,8,10,10,8]],pos:[[{x:0.08,y:0.04},{x:-0.1,y:0.06},{x:0.02,y:-0.12},{x:0.2,y:0.1},{x:-0.05,y:-0.02},{x:0.12,y:-0.08}],[{x:0.05,y:0.09},{x:-0.07,y:0.01},{x:0.15,y:-0.1},{x:-0.12,y:0.14},{x:0.01,y:0.02},{x:0.09,y:-0.05}]]};
  const r2={id:'s_demo2',date:d1,round:'WA 50/720',finished:true,ends:[[10,10,9,9,10,8],[10,9,9,9,8,10]],pos:[[{x:0.04,y:0.03},{x:-0.06,y:0.05},{x:0.01,y:-0.07},{x:0.1,y:0.08},{x:-0.03,y:-0.01},{x:0.08,y:-0.04}],[{x:0.02,y:0.05},{x:-0.05,y:0.02},{x:0.09,y:-0.06},{x:-0.08,y:0.09},{x:0.0,y:0.01},{x:0.06,y:-0.03}]]};
+ const tune={id:'t_demo1',date:d1,name:'Paper tune after new rest',change:'Paper tune',dist:'18m',face:'40cm',note:'Rest moved in a little.',before:[[0.08,0.04],[0.10,0.06],[-0.05,0.02]],after:[[0.02,0.01],[0.03,-0.02],[-0.01,0.02]]};
  const key='scoretool.v1.'+aid;
- const st=load(key,{profile:name,unlocked:true,sessions:[],best:[],plots:[],diary:[],setup:[],notes:{}});
- st.profile=name;st.unlocked=true;
+ const st=load(key,{profile:name,unlocked:true,sessions:[],best:[],plots:[],diary:[],setup:[],notes:{},tune:[]});
+ st.profile=name;st.unlocked=true;st.tune=st.tune||[];
  if(!st.sessions.some(s=>s&&s.id==='s_demo1'))st.sessions.push(r1);
  if(!st.sessions.some(s=>s&&s.id==='s_demo2'))st.sessions.push(r2);
+ if(!st.tune.some(x=>x&&x.id==='t_demo1'))st.tune.push(tune);
  if(!st.diary.some(x=>x&&x.id==='d_demo1'))st.diary.push({id:'d_demo1',archer:name,date:d1,text:'Felt steady through the first half. Sight mark at 50 m felt a touch high.'});
  store(key,st);
  const code='STDEMO1';
  let L=links();
  if(!L.some(x=>x.code===code)){
-  L.push({code,archerId:aid,archerName:name,coachId:null,coachName:'',coachEmail:'',status:'pending',created:d1,claimedAt:''});
+  L.push({code,archerId:aid,archerName:name,coachId:'demo-coach',coachName:'Demo coach',coachEmail:'',status:'active',created:d1,claimedAt:d1});
   saveLinks(L);
  }
- store('scoretool.coach.feed.'+aid, {name,id:aid,rounds:[packRound(r1),packRound(r2)].map((p,i)=>({id:i?r2.id:r1.id,date:p.d,round:p.r,score:p.sc,ends:p.ends,pos:p.pos,dist:'50m'})),diary:[{id:'d_demo1',date:d1,text:'Felt steady through the first half. Sight mark at 50 m felt a touch high.'}],updated:Date.now()});
+ setMeCoach({id:'demo-coach',name:'Demo coach',signedIn:true,homescreen:true,demo:true});
+ store('scoretool.coach.feed.'+aid, {name,id:aid,rounds:[
+  Object.assign(packRound(r1),{id:r1.id,date:r1.date,round:r1.round,score:packRound(r1).sc,ends:packRound(r1).ends,pos:packRound(r1).pos,dist:'50m',kind:'competition'}),
+  Object.assign(packRound(r2),{id:r2.id,date:r2.date,round:r2.round,score:packRound(r2).sc,ends:packRound(r2).ends,pos:packRound(r2).pos,dist:'50m',kind:'practice'})
+ ],tunes:[packTune(tune)],diary:[{id:'d_demo1',date:d1,text:'Felt steady through the first half. Sight mark at 50 m felt a touch high.'}],updated:Date.now()});
  store('scoretool.coach.demoseed',true);
 }
 function bootDemo(){
@@ -728,25 +840,10 @@ function bootDemo(){
 }
 
 /* ---------- hooks ---------- */
-function afterMe(){const el=$('#coachcard')||$('#coachdeskcard')||$('#coachlock');if(el)return;const settings=$('#settingscard');const html=coachArcherCard();
- if(!html)return;
- const wrap=document.createElement('div');wrap.innerHTML=html;
- const node=wrap.firstElementChild;if(!node)return;
- const moments=app.querySelector('.card');
- if(settings)settings.parentNode.insertBefore(node,settings);
- else app.appendChild(node);
- bindArcherCard();
-}
-function afterRender(){
- bindDemoBanner();
- if($('#coachcard')||$('#chaddcard')||$('#chdesk')||$('#coachshare')||$('#chjoin')||$('#chhomehow')||$('#chsharesheet'))bindDemoBanner();
-}
-
 function hook(){
  wrap('save',pushFeed);
- wrap('me',()=>{afterMe();bindArcherCard();afterRender()});
- wrap('diary',()=>{paintDiary();afterRender()});
- wrap('score',()=>{paintScore();afterRender()});
+ wrap('diary',()=>{paintDiary()});
+ wrap('score',()=>{paintScore()});
  const _render=window.render;
  if(typeof _render==='function'){
   window.render=function(){
@@ -754,7 +851,7 @@ function hook(){
    const q=new URLSearchParams(location.search);
    if(q.get('coachjoin')||isCoachHash()){try{if(coachRoute())return}catch(e){}}
    const r=_render.apply(this,arguments);
-   try{afterMe();bindArcherCard();afterRender()}catch(e){}
+   try{paintMenuBadge()}catch(e){}
    return r;
   };
  }
@@ -765,6 +862,7 @@ function hook(){
  }
 }
 hook();
+window.coachEnsureLink=window.coachEnsureLink||function(){return dataLink(ensureShareRow())};
 window.coachPackRound=packRound;
 window.coachShareUrl=shareUrl;
 window.coachLinks=links;
@@ -775,4 +873,6 @@ window.coachBootDemo=bootDemo;
 window.coachSeedDemo=seedDemo;
 window.coachActiveArchers=activeArchers;
 window.coachAnalyse=analyse;
+window.coachUnreadNotes=unreadNotes;
+window.coachMarkNotesSeen=markNotesSeen;
 })();

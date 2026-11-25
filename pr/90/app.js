@@ -916,14 +916,14 @@ function estRating(real){if(typeof aaRating!='function')return'';loadNext();cons
  <p class="small"><a href="https://www.archersdiary.com/RatingCalculator.aspx" target="_blank" rel="noopener">Online rating calculator</a> · <a href="https://archery.org.au/wp-content/uploads/2026/07/SHOOTINGRULES-AA-2026-07-01.pdf" target="_blank" rel="noopener">AA Shooting Rules</a></p></details></div>`}
 
 function me(){const url=location.href.split('#')[0]+'#share='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(shareData())))));
- app.innerHTML=`${window.meTop?meTop():''}${window.coachArcherCard?coachArcherCard():''}<div class="card"><span class="kicker">My best moments</span><h2>My best moments</h2><p class="small muted">Read these before a big shoot. You've done it before!</p>
+ app.innerHTML=`${window.meTop?meTop():''}<div class="card"><span class="kicker">My best moments</span><h2>My best moments</h2><p class="small muted">Read these before a big shoot. You've done it before!</p>
  ${S.best.length?S.best.map(e=>`<div class="list-item"><b>${e.total}</b> · ${e.round} · ${e.date} ${e.sample?'<span class="sample">sample</span>':''}<div class="small">${e.text}</div></div>`).join(''):'<p>Nothing saved yet. Tap "Save to my best moments" on a good day.</p>'}
  <label for="bm">Add a moment in your own words</label><textarea id="bm" rows="2" placeholder="e.g. Stayed calm in the shoot-off at Kalamunda"></textarea><button class="btn ghost" id="bmadd" style="margin-top:6px">Add</button></div>
  ${coachCards(url)}
  ${window.helpCards?helpCards():''}${window.otherAppsCard?otherAppsCard():''}<div class="card" id="settingscard"><span class="kicker">Settings</span><h2>Settings</h2><label for="sbside">Scroll bar side</label><select id="sbside"><option value="right" ${S.sbarSide!='left'?'selected':''}>Right (default)</option><option value="left" ${S.sbarSide=='left'?'selected':''}>Left</option></select><p class="small muted">Where the slim scroll bar sits on the scoring screen, so you can scroll without touching the target.</p><label class="small" style="display:flex;gap:6px;align-items:center;margin-top:10px;font-weight:600"><input type="checkbox" id="cbsafe" style="width:auto;margin:0" ${CB()?'checked':''}> Colour-blind safe colours</label><p class="small muted" id="privnote" style="margin-top:10px">We use Microsoft Clarity to see how the app is used (taps and scrolling) so we can improve it; typed details are hidden.</p></div>${testerCard()}<div class="card"><button class="btn ghost" id="rs">Reset my scores on this phone</button></div>`;bindTesterPicker(app);
  $('#bmadd').onclick=()=>{const t=$('#bm').value.trim();if(t){S.best.push({date:new Date().toISOString().slice(0,10),text:t,total:'⭐',round:'My note'});save();me()}};
  $('#cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(url);$('#cp').textContent='Copied ✓'};
- bindCoachCards();if(window.bindArcherCard)bindArcherCard();
+ bindCoachCards();
  {const cb=$('#cbsafe');if(cb)cb.onchange=()=>{S.cb=cb.checked;save();cbSync()}}
  $('#sbside').onchange=e=>{S.sbarSide=e.target.value=='left'?'left':'right';save();sbarSync()};
  if(window.bindOtherApps)bindOtherApps();$('#rs').onclick=()=>{if(confirm('Clear all of '+(TESTER?TESTER.short:'this')+'\'s scores on this phone?')){localStorage.removeItem(KEY);location.reload()}}}

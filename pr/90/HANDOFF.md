@@ -4,6 +4,14 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 26 Nov 2026, 06:28 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: Reworked PR #90 on branch `cursor/coaching` (cache `v2026-11-26-0628-coachshare`). Nathe t1215u / t1216u: he did not like the first coaching flow. Archer side is now one button in the existing My archery › Coach screen: "Share my data with coach". It creates a link the archer sends (native share sheet, with a copy fallback). A small Stop sharing option remains. The separate unreleased coaching screens were removed from the archer UI (listed in the PR body and below). Coach side: the first link still runs one ScoreTool + Archery Calendar sign-up, then the add-to-home-screen how-to; later links go straight in. The archer's name shows under Tools › Coaching. Tapping the name opens all working analysis, every practice and tuning session, and the diary. The coach can add a note to any item; notes open and shut so the page stays neat. The archer gets an in-app notice and a badge when the coach leaves notes, plus a dropdown of all notes on the Coach page (dated, newest first). A system push is sent only if the phone has already allowed notifications; no new push service was added. Plus/Pro still required for the archer. League scoring stays free. Lingkana data untouched. No refund or Stripe wording. Colours stay royal and neon blue, no purple. Under-16 names are not hidden. `tools/coach_feature_test.py` rewritten for this flow: 49/49. Preview at scoretool-lab/pr/90/?coachdemo=1. Screenshots in `/workspace/st-coach/v2/`.
+- This rework removes these earlier unreleased coaching screens: Add my coach / Send this code card; Share a round list; the one-off share sheet and finished-round "Share with a coach" footer; the Preview as archer/coach banner and role-switch toggles; the Coach card injected on Me; the hash desk (`#coach` / `lab_coachdesk`) as the primary coach home, now replaced by Tools › Coaching.
+- Half-done: PR only, not merged. Needs Nathe's "go" after he checks the new preview. Ongoing two-phone sync waits for the schema at go-live. Apple sign-in for coaches waits until Apple activates the developer account.
+- Decision: nothing goes live until Nathe OKs the preview. R3 and AC1–AC5 stay out of this PR.
+
 ## 26 Nov 2026, 06:00 AWST — [Jarvis]
 
 - Who: Jarvis.

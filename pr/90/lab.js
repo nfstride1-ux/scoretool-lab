@@ -84,11 +84,12 @@ E.myarch=()=>menu('My archery',[
  row('lab_latest','⭐','Latest shoot','How your last shoot went, wins of the day, notes'),
  row('lab_arrows','➕','Practice arrows','Today\'s arrow count and weekly progress'),
  row('lab_diary','📝','Diary','Shooting diary in your own words'),
- row('lab_coach','🧑‍🏫','Coach','Share a round or add your coach'),
+ row('lab_coach','🧑‍🏫','Coach','Share my data with coach'),
  row('lab_gear','🏹','Setups & sight marks','Bow setups, sight marks by distance, scores per setup'),
  row('lab_ranks','🏅','Rankings & classification','Real AA rankings and classification progress')]);
 sub('lab_latest','myarch','Latest shoot','myarch','My archery',()=>_home(),(e,t,i)=>i<3||/FROM YOUR NOTES/.test(t));
 sub('lab_arrows','myarch','Practice arrows','myarch','My archery',()=>_home(),(e,t,i)=>i==0||/TODAY'S ARROWS/.test(t));
+LABSEC.lab_coach='myarch';
 sub('lab_diary','myarch','Diary','myarch','My archery',()=>diary(),(e,t)=>/SHOOTING DIARY|TIMELINE|COACH DRILLS|COACH NOTES/.test(t));
 sub('lab_ranks','myarch','Rankings & classification','myarch','My archery',()=>E.rewards(),e=>e.id=='realrank'||e.id=='c-class'||e.id=='rankcard'||e.id=='rank-slot',()=>{
  if(typeof aaRankCard!='function'||document.getElementById('rank-slot'))return;
@@ -137,11 +138,13 @@ sub('lab_settings','me','Settings & help','lab_me','Me',()=>me(),(e,t)=>['settin
 /* ---------- Tools ---------- */
 LABSEC.tools='tools';
 E.tools=()=>menu('Tools',[
+ row('lab_coaching','🧑‍🏫','Coaching','Your archers, analysis and notes'),
  row('lab_tune','🎯','Tune helper','Paper, torque, draw weight and spine, cut length, bare shaft, node, creep, Dudley'),
  row('lab_chooser','🏹','Arrow chooser','Starting spine and cut length from the makers\' charts, FOC and point weight'),
  row('lab_rounds','◎','Rounds','Distances and faces when a club names the round'),
  row('lab_rules','📓','Rules','World Archery, Archery Australia, ABA, IBO, ASA and IFAA, with sources'),
  row('lab_mydata','📥','Import my data','Your own scoresheets, results and sight marks, from the file you were sent')]);
+LABSEC.lab_coaching='tools';
 LABSEC.lab_mydata='tools';if(window.MYDATA_VIEW)E.lab_mydata=window.MYDATA_VIEW;
 
 /* Arrow optimizer: groups on a plain tuning face. Before = blue circles, After = black squares (shape and colour both differ). */

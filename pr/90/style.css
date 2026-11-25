@@ -422,3 +422,15 @@ label.lk-paidrow input[type=checkbox]{
 .ch-tog label{display:flex;gap:6px;align-items:center;font-size:14px}
 .ch-note{border-left:3px solid #1d4ed8;padding-left:10px}
 #chdemobar .kicker{color:#38e1ff}
+
+.ch-fold{border:1px solid var(--line,#1a2a44);border-radius:12px;padding:0;margin:8px 0;background:var(--card,#0f1724)}
+.ch-fold>summary{list-style:none;cursor:pointer;padding:10px 12px;font-weight:650;display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
+.ch-fold>summary::-webkit-details-marker{display:none}
+.ch-fold>summary::after{content:'▾';margin-left:auto;color:#5ab0ff;font-weight:800}
+.ch-fold[open]>summary::after{content:'▴'}
+.ch-fold>summary + *,.ch-fold .ch-plot,.ch-fold p,.ch-fold table,.ch-fold .ch-itemnotes,.ch-fold label,.ch-fold .row{margin-left:12px;margin-right:12px}
+.ch-fold > :last-child{margin-bottom:12px}
+.ch-note{border-left:3px solid #1d4ed8;padding-left:0;margin:8px 0}
+.ch-alert{background:#1d4ed8;color:#fff;border-radius:10px;padding:10px 12px;font-weight:650;margin:0 0 10px}
+#challnotesbox #chnoteview{margin-top:8px}
+.labrow .ch-new{margin-left:6px}
