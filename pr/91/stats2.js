@@ -76,7 +76,7 @@ function tipFor(P,x){if(x&&x.aba&&x.s&&window.aba3DBlocks){const b=aba3DBlocks(a
 function render(){if(window.abaSeed)abaSeed();const L=allShoots(),RL=roundList(L),rc={};RL.forEach(o=>rc[o.r]=o.n);
  const rounds=RL.map(o=>o.r);
  const nInc=L.filter(x=>x.inc).length;
- if(!rounds.length){app.innerHTML=`<div class="card"><span class="kicker">Stats</span><h2>No scores yet</h2><p class="small muted">Score a round in the app, or your past competition results show here once they load.</p>${nInc?`<label class="small" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="incinc" style="width:18px;height:18px"> Include incomplete rounds (${nInc})</label>`:''}</div>`;bind();return}
+ if(!rounds.length){app.innerHTML=`<div class="card"><span class="kicker">Stats</span><h2>No scores yet</h2><p class="small muted">Score a round in the app, or your past competition results show here once they load.</p>${/\/test(\/|$)/.test(location.pathname)||/\/scoretool-lab\//.test(location.pathname)?`<p class="small">To test with your live scores, open Me, then Settings, and copy them here or load a backup file.</p>`:''}${nInc?`<label class="small" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="incinc" style="width:18px;height:18px"> Include incomplete rounds (${nInc})</label>`:''}</div>`;bind();return}
  if(!ST.r||!rc[ST.r])ST.r=rounds[0];const P=poolOf(L,ST.r),newest=P[P.length-1];let x=P.find(s=>s.id==ST.id);if(!x){x=newest;ST.id=x.id}
  const n=P.length,full=P.filter(s=>!s.inc),R=ROUNDS[Object.keys(ROUNDS).find(k=>canon(k)==ST.r)]||{};
  let h=`<div class="card dark" id="statpick"><span class="kicker">Stats</span><h2 style="margin:2px 0 8px">Pick a round and a shoot</h2>

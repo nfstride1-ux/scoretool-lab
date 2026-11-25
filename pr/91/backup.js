@@ -25,15 +25,33 @@ window.stBackupCheck=function(txt){let b;try{b=JSON.parse(txt)}catch(e){return{o
  if(!b||b.app!='ScoreTool'||b.kind!='backup'||!b.keys||typeof b.keys!='object'||typeof b.main!='string'||typeof b.keys[b.main]!='string')return{ok:false,msg:'That file is not a ScoreTool backup.'};
  let m;try{m=JSON.parse(b.keys[b.main])}catch(e){return{ok:false,msg:'That backup file is damaged (the scores part could not be read).'}}
  if(!m||!Array.isArray(m.sessions))return{ok:false,msg:'That backup file is damaged (no list of shoots in it).'};
- if(b.tester!=tid())return{ok:false,msg:'That backup belongs to '+(b.name||b.tester)+'. Switch to that archer first, then restore it there.'};
+ if(b.tester!=tid()){
+  const has=(typeof S!='undefined'&&S&&Array.isArray(S.sessions)&&S.sessions.length>0);
+  if(has)return{ok:false,msg:'That backup belongs to '+(b.name||b.tester)+'. Switch to that archer first, then restore it there.'};
+  return{ok:true,adopt:true,b,n:shoots(m),msg:''};
+ }
  if(b.main!=KEY)return{ok:false,msg:'That backup does not match this archer on this phone.'};
  for(const k of Object.keys(b.keys)){if(!/^scoretool\./.test(k)||typeof b.keys[k]!='string')return{ok:false,msg:'That backup file has something in it that is not ScoreTool data, so it was not used.'}}
  return{ok:true,b,n:shoots(m),msg:''}};
 window.stBackupRestore=function(txt,noConfirm){const c=stBackupCheck(txt);if(!c.ok){say(c.msg);return false}
  if(window.ADMIN_VIEW){say("You are viewing "+tname()+"'s profile, so nothing was restored. Tap Back to my profile at the top to use your own.");return false}
- const q='Replace the ScoreTool data on this phone for '+tname()+' ('+shoots(S)+' shoots) with the backup from '+fmt(c.b.made)+' ('+c.n+' shoots)? A copy of what is on the phone now is kept here first.';
+ const who=c.b.name||c.b.tester||'this archer';
+ const q=c.adopt
+  ?('Load the backup for '+who+' from '+fmt(c.b.made)+' ('+c.n+' shoots) onto this test page? Your live ScoreTool scores are not changed.')
+  :('Replace the ScoreTool data on this phone for '+tname()+' ('+shoots(S)+' shoots) with the backup from '+fmt(c.b.made)+' ('+c.n+' shoots)? A copy of what is on the phone now is kept here first.');
  if(!noConfirm&&!confirm(q))return false;
- try{localStorage.setItem(PREK(),JSON.stringify(makeBackup()))}catch(e){say('There is not enough space on this phone to keep a copy first, so nothing was restored.');return false}
+ if(c.adopt){
+  try{
+   let A=[];try{A=JSON.parse(localStorage.getItem('scoretool.archers')||'[]')||[]}catch(e){A=[]}
+   if(!Array.isArray(A))A=[];
+   if(!A.some(a=>a&&a.id===c.b.tester))A.push({id:c.b.tester,name:c.b.name||c.b.tester,short:String(c.b.name||c.b.tester).split(/\s+/)[0],bow:'Compound',founding:c.b.tester=='nathe'});
+   localStorage.setItem('scoretool.archers',JSON.stringify(A));
+   localStorage.setItem('scoretool.tester',c.b.tester);
+  }catch(e){say('The profile for that backup could not be created, so nothing was restored.');return false}
+ }
+ else{
+  try{localStorage.setItem(PREK(),JSON.stringify(makeBackup()))}catch(e){say('There is not enough space on this phone to keep a copy first, so nothing was restored.');return false}
+ }
  try{Object.keys(c.b.keys).forEach(k=>localStorage.setItem(k,c.b.keys[k]))}catch(e){say('The restore could not finish (the phone is out of space). Your previous data is still kept as a copy.');return false}
  try{localStorage.setItem('scoretool.restored.note',JSON.stringify({t:Date.now(),n:c.n}))}catch(e){}
  location.reload();return true};
@@ -49,12 +67,45 @@ function card(){const last=localStorage.getItem(LASTK());
 <button class="btn" id="bkdl" type="button">Save a backup file</button> <button class="btn ghost" id="bkrs" type="button">Restore from a backup file</button>
 <input type="file" id="bkfile" accept=".json,application/json" hidden>
 <p class="small" id="bkmsg" role="status" hidden></p>
+<h2 style="margin-top:14px">Test page</h2>
+<p class="small">Preview links and the in-app test page start with no scores, so analysis has nothing to show until your scores are copied across. Copying does not change your live scores.</p>
+<button class="btn" id="bkcopytest" type="button">Copy my scores to the test page</button>
+<p class="small" id="bkcopyhelp">Or, on a preview opened in Safari, save a backup file above, then open the preview and tap Restore from a backup file.</p>
 <h2 style="margin-top:14px">Privacy</h2>
 <p class="small" id="privacy">Your scores, sight marks and settings are kept on this phone. For the free app there is no account, no login and no payment details. Paid plans add Google or Apple sign-in, and payments are handled by the payment processor. Something leaves the phone only in these cases: league, match and group scores (with your display name) are shared with the other archers through a relay (ntfy.sh); if you link Archery Calendar, the rounds you send and their photos go to your Archery Calendar account; and anonymous usage (taps and scrolling, with anything you type hidden) is recorded by Microsoft Clarity so the app can be improved. A backup file is saved only where you choose. If you sign in, account backups are described under Restore my data, and this file backup still works. <a href="privacy.html">Privacy and terms</a></p></div>`}
 function draw(){const el=document.getElementById('datacard');if(!el)return;el.outerHTML=card();bind()}
+function testPageUrl(){const path=location.pathname||'/';
+ if(/\/test\/?$/.test(path))return path.endsWith('/')?path:path+'/';
+ const dir=path.replace(/\/[^\/]*$/,'/');
+ return dir+'test/'}
+function copyKeysToTestStore(){
+  const P='sttest.';
+  const keys=myKeys().slice();
+  ['scoretool.tester','scoretool.archers','scoretool.theme','scoretool.names'].forEach(k=>{if(!keys.includes(k)&&localStorage.getItem(k)!=null)keys.push(k)});
+  const id=tid();
+  const dnk='scoretool.dname.'+id;if(localStorage.getItem(dnk)!=null)keys.push(dnk);
+  const mdk='scoretool.mydata.'+id;if(localStorage.getItem(mdk)!=null&&!keys.includes(mdk))keys.push(mdk);
+  let n=0;
+  keys.forEach(k=>{const v=localStorage.getItem(k);if(v==null)return;localStorage.setItem(P+k,v);n++});
+  if(!localStorage.getItem(P+'scoretool.tester'))localStorage.setItem(P+'scoretool.tester',id);
+  return {ok:n>0,keys:n,sessions:shoots(S)};
+}
 function bind(){const d=document.getElementById('bkdl'),r=document.getElementById('bkrs'),f=document.getElementById('bkfile');if(!d)return;
  d.onclick=()=>stBackupDownload();r.onclick=()=>f.click();
- f.onchange=()=>{const file=f.files&&f.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{stBackupRestore(String(rd.result||''));f.value=''};rd.onerror=()=>say('That file could not be read.');rd.readAsText(file)}}
+ f.onchange=()=>{const file=f.files&&f.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{stBackupRestore(String(rd.result||''));f.value=''};rd.onerror=()=>say('That file could not be read.');rd.readAsText(file)}
+ const c=document.getElementById('bkcopytest');
+ if(c)c.onclick=()=>{
+  if(/\/test(\/|$)/.test(location.pathname||'')&&typeof window.__stCopyLiveToTest=='function'){
+   const r=window.__stCopyLiveToTest();
+   if(!r||!r.ok){say((r&&r.err)||'No live ScoreTool scores were found on this phone. If you use the home-screen app, save a backup file there and restore it here.');return}
+   say('Copied '+(r.sessions||0)+' shoot'+(r.sessions==1?'':'s')+' to this test page. Opening them…');
+   setTimeout(()=>location.reload(),500);return;
+  }
+  const r=copyKeysToTestStore();
+  if(!r.ok){say('There were no scores to copy.');return}
+  say('Copied '+r.sessions+' shoot'+(r.sessions==1?'':'s')+' to the test page. Opening it…');
+  setTimeout(()=>{location.href=testPageUrl()+(tid()?'?tester='+encodeURIComponent(tid()):'')},500);
+ }}
 function mount(){if(document.getElementById('datacard'))return;const s=document.getElementById('settingscard');if(!s)return;s.insertAdjacentHTML('afterend',card());bind();
  const o=restored();if(o)say('Backup restored: '+o.n+' shoots.')}
 /* the restore note shows for a minute after the reload, on the Settings card and once as a toast */

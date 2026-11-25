@@ -64,7 +64,7 @@ home=function(){addMe();let last='';try{const L=latestShoot();if(L)last=`Last sh
   <button class="hub-tile" data-go="clubs"><span class="i" aria-hidden="true">👥</span><b>Clubs &amp; leagues</b><small>Squads, leagues, match play, following</small></button>
   <button class="hub-tile" data-go="tools"><span class="i" aria-hidden="true">🔧</span><b>Tools</b><small>Arrow optimizer, calculators, 3D rules</small></button>
   <a class="hub-tile" href="https://archerycalendars.com/#/calendar" target="_blank" rel="noopener"><span class="i" aria-hidden="true">📅</span><b>Calendar</b><small>My events on archerycalendars.com ↗</small></a>
- </div>`;bindGo()};
+ </div>${(typeof stNeedsScoreLoad==='function'&&stNeedsScoreLoad()&&typeof stLoadScoresCard==='function')?stLoadScoresCard():''}`;bindGo();if(typeof stNeedsScoreLoad==='function'&&stNeedsScoreLoad()&&typeof stBindLoadScores==='function')stBindLoadScores()};
 
 /* ---------- Score: just the scoring ---------- */
 const _score=score;

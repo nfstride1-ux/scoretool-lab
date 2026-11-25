@@ -35,6 +35,36 @@
       }});
     }
     window.__ST_TEST_STORE=P;
+
+/* Read and copy the live app's unprefixed scoretool.* keys into this /test/ store
+   (sttest.), so analytics can be tried without touching the live scores. */
+window.__stLiveKeyCount=function(){
+  try{
+    var n=rawLen(window.localStorage),j,k,c=0;
+    for(j=0;j<n;j++){k=rawKey.call(window.localStorage,j);if(k&&k.indexOf(P)!==0&&k.indexOf('scoretool.v1')===0){var v=rawGet.call(window.localStorage,k);if(v)c++}}
+    return c;
+  }catch(e){return 0}
+};
+window.__stCopyLiveToTest=function(){
+  try{
+    var n=rawLen(window.localStorage),j,k,copied=0,sessions=0,skipped={};
+    skipped['scoretool.prerestore']=1;
+    for(j=0;j<n;j++){
+      k=rawKey.call(window.localStorage,j);
+      if(!k||k.indexOf(P)===0)continue;
+      if(k.indexOf('scoretool.')!==0)continue;
+      if(k.indexOf('scoretool.prerestore.')===0||k.indexOf('scoretool.lastbackup.')===0||k.indexOf('scoretool.acct')===0||k.indexOf('scoretool.restored.')===0)continue;
+      var v=rawGet.call(window.localStorage,k);
+      if(v==null)continue;
+      rawSet.call(window.localStorage,P+k,v);
+      copied++;
+      if(k==='scoretool.v1'||k.indexOf('scoretool.v1.')===0){
+        try{var o=JSON.parse(v);if(o&&Array.isArray(o.sessions)&&o.sessions.length>sessions)sessions=o.sessions.length}catch(e){}
+      }
+    }
+    return {ok:copied>0,keys:copied,sessions:sessions};
+  }catch(e){return {ok:false,keys:0,sessions:0,err:'Could not copy the live scores.'}}
+};
   }catch(e){}
 })();
 

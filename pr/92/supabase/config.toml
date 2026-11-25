@@ -1,0 +1,6 @@
+# Deployed onto the existing Archery Calendar Supabase project (sllsqpfqwckwtljzjxli).
+# This file does not contain secrets.
+project_id = "sllsqpfqwckwtljzjxli"
+
+[functions.stripe-entitlement]
+verify_jwt = false
