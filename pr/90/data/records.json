@@ -1,0 +1,26 @@
+{
+ "_about": "Record scores for the Race who? picker (Score tab, Ghost match). Only figures confirmed from a published source are listed; a round or category with no confirmed figure shows 'Record not available' and no number. To update: edit the score, name, country and date, and change 'checked'. Nothing else in the app needs to change. Records are totals only, so the ghost uses an even per-end pace line, labelled as a pace line.",
+ "updated": "2026-10-26",
+ "world": {
+  "Indoor WA 18m": {
+   "round": "World Archery Indoor 18m, 60 arrows, 600 maximum (20 ends of 3). Open class (not age-group) world records.",
+   "source": "World Archery standing records report (AR_C24), created 16 Jan 2026",
+   "url": "https://ianseo.net/TourData/2026/26249/SRECSTD.pdf",
+   "also_checked": "https://www.worldarchery.sport/world-records (recently broken list showed no 18m indoor change up to 19 Oct 2026)",
+   "checked": "2026-10-26",
+   "records": [
+    {"bow":"Compound","g":"Male","score":600,"name":"Mike Schloesser","country":"NED","date":"2015-01-24","place":"Nimes (FRA)"},
+    {"bow":"Compound","g":"Female","score":598,"name":"Hazal Burun","country":"TUR","date":"2024-01-05","place":"Antalya (TUR)"},
+    {"bow":"Recurve","g":"Male","score":599,"name":"Brady Ellison","country":"USA","date":"2017-01-20","place":"Nimes (FRA)"},
+    {"bow":"Recurve","g":"Female","score":599,"name":"An San","country":"KOR","date":"2025-12-05","place":"Taoyuan City (TPE)"},
+    {"bow":"Barebow","g":"Male","score":573,"name":"Zackary Bisinger","country":"USA","date":"2025-02-14","place":"Chicago (USA)"},
+    {"bow":"Barebow","g":"Female","score":557,"name":"Kristina Maria Pruccoli","country":"SMR","date":"2025-12-06","place":"Clarkston, Michigan (USA)"}
+   ]
+  }
+ },
+ "national": {
+  "_status": "No Australian national record figure could be confirmed for any round on 26 Oct 2026, so none is listed. The Archery Australia records list is a search form (https://archersdiary.com/Records.aspx) that could not be read from here, and the only list found elsewhere is undated and does not match the rounds. Archery Australia accepts national records for WA Indoor 18m and Australian Indoor 1 (18m) (Shooting Rules, July 2026, Schedule 4B.6: https://archery.org.au/wp-content/uploads/2026/07/SHOOTINGRULES-AA-2026-07-01.pdf). To add one, put it under the round name here as {\"bow\":\"Compound\",\"g\":\"Male\",\"score\":0,\"name\":\"\",\"date\":\"YYYY-MM-DD\",\"url\":\"\",\"checked\":\"YYYY-MM-DD\"}.",
+  "Indoor WA 18m": {"records": []},
+  "Australian Indoor 18m": {"records": []}
+ }
+}
