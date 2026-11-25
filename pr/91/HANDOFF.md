@@ -4,6 +4,12 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 26 Nov 2026, 07:05 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: Nathe 6:59am "Make tune preview not paid version". plans.js tierOf returns 'pro' only when host is nfstride1-ux.github.io and path matches /scoretool-lab/pr/<n>/ (previewOpen). Live /scoretool-demo/ and localhost never match. Cache v2026-11-26-0659-tuningpreview. pr/91 republished.
+- Decision: unlock lives in code behind the address check (not a hand-patched preview copy), so any republish keeps it and merging it changes nothing live.
+
 ## 26 Nov 2026, 06:50 AWST — [Jarvis]
 
 - Who: Jarvis.

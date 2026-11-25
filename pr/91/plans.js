@@ -44,7 +44,13 @@ function paidOpen(){
  if(Number.isFinite(end)&&end<=Date.now())return false;
  return true}
 window.scoretoolPaidOpen=paidOpen;
+/* Test previews only (Nathe 26 Nov 6:59am "Make tune preview not paid version"): a pull-request preview on scoretool-lab
+   (nfstride1-ux.github.io/scoretool-lab/pr/<n>/) opens every Plus and Pro feature without a paid account. The live app
+   (/scoretool-demo/) and every other address never match, so live gating is unchanged. */
+const previewOpen=()=>{try{return location.hostname==='nfstride1-ux.github.io'&&/^\/scoretool-lab\/pr\/\d+\//.test(location.pathname)}catch(e){return false}};
+window.scoretoolPreviewOpen=previewOpen;
 window.tierOf=function(){
+ if(previewOpen())return 'pro';
  if(founding())return 'founding';
  if(paidOpen()){const t=read(ENT).tier;if(t==='pro'||!early())return t}
  if(early())return 'early';
