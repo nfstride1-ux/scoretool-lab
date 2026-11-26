@@ -204,8 +204,8 @@ select#rd.wrd-select{position:absolute;width:1px;height:1px;padding:0;margin:-1p
 .tpad .tpc{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:#1d4ed8;color:#fff;font-size:11px}
 [data-theme=dark] .tpad button{color:#00c8ff}
 [data-theme=dark] .tcross{--tbg:#0b1220;--tgrid:#1e3a8a}
-.tgeo{display:inline-block;padding:0 6px;border-radius:8px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:600;vertical-align:1px}
 .tpastrow{display:flex;gap:6px;align-items:stretch;margin:0 0 10px}.tpastrow .labrow{flex:1;min-width:0;margin:0}.tpastdel{flex:0 0 auto;min-height:44px;padding:4px 10px}
+.tleg-l{color:#1d4ed8;font-weight:700}.tleg-r{color:#00c8ff;font-weight:700}
 .tchg{list-style:none;margin:6px 0;padding:0}.tchg li{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line,#e2e8f0)}.tchg .btn{min-height:36px;padding:4px 10px}
 details#tarwcard>summary{cursor:pointer;list-style:none;min-height:32px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 details#tarwcard>summary::-webkit-details-marker{display:none}

@@ -24,7 +24,7 @@ const SRC={
  eastonClr:['Easton Arrow Tuning and Maintenance Guide (launcher rests p. 3; Clearance p. 5; Correcting Clearance Problems and shoot-through / shoot-around rests p. 6; Excessive Drag p. 9)','https://eastonarchery.com/wp-content/uploads/2019/08/TuningGuideEaston.pdf'],
  biVanes:['Tippins A., "The essential guide to vanes", Bow International, 22 Jul 2020','https://www.bow-international.com/reviews/equipment/the-essential-guide-to-vanes/'],
  biVaneQA:['Tippins A., "Q&A: Picking your vanes", Bow International, 3 Mar 2018','https://www.bow-international.com/faqs/qa-picking-your-vanes/'],
- eastonFOC:['Easton: The Simple Guidelines to Correct Arrow Balance (FOC), George Tekmitchov, June 2022','https://eastonarchery.com/2022/06/the-simple-guidelines-to-correct-arrow-balance-foc/'],
+ eastonFOC:['Easton: The Simple Guidelines to Correct Arrow Balance (FOC), June 2022','https://eastonarchery.com/2022/06/the-simple-guidelines-to-correct-arrow-balance-foc/'],
  gt:['Gold Tip Arrow Spine Selector charts (Recurve Bow; Compound Bow IBO 315- and 315+)','https://goldtip.com/pages/spine-selector'],
  victory:['Victory Archery Arrow Guide, compound chart "VF/RIP XV/RVL Spine Chart" (bow rating 300-340 fps)','https://victoryarchery.com/arrow-guide/'],
  skylon:['Skylon Archery target chart "Correct arrow length for Target - Field - 3D"','https://www.skylonarchery.com/images/chart/chart%20target.pdf'],

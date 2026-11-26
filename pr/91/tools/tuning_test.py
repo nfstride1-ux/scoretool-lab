@@ -2,7 +2,7 @@
 """Tuning sessions, 26 Nov 2026 (Nathe: 'Yes, build the tuning preview'). Phone size 390x844, Pro member, no network to Stripe or Supabase.
 Checks: one bow picker + one arrow picker (no 'Use my arrow setup' tick box, no Face choice), the Concept X 40 / 37 mismatch fixed,
 paper tune tear keypad (3 x 3, any number of arrows, tear->fix hints), crosshair lines per tune (torque vertical, Dudley horizontal,
-group both), What I changed (compound/recurve filter, direction, amount, note, George marks), Arrow setup collapsed by default,
+group both; Torque has torqued-left and torqued-right groups before and after), What I changed (compound/recurve filter, direction, amount, note, no George marks), Tune helper setup-first compound/recurve order, Arrow setup collapsed by default,
 past sessions deleted only after a confirm, an old face session still opens unchanged, bare shaft verdict, Arrow chooser AC1-AC5 still there,
 Lingkana keys untouched. BASE env runs it against another copy. Screenshots go to $SHOTS."""
 import json, os, subprocess, sys, time
@@ -83,7 +83,7 @@ try:
         chk('paper: any number of arrows, one per tap', T['paper']['before'] == ['u', 'u', 'u', 'b', 'ur', 'u', 'l'], T.get('paper'))
         chk('paper: tear list', '7 arrows' in pg.inner_text('#tearlist'))
         ht = pg.inner_text('#tearhint')
-        chk('paper: tear->fix hint (nock high)', 'Most common tear: Nock high' in ht and 'lower the nocking point or raise the rest' in ht and 'George' in ht, ht)
+        chk('paper: tear->fix hint (nock high)', 'Most common tear: Nock high' in ht and 'lower the nocking point or raise the rest' in ht and 'George' not in ht and 'Ryles' not in ht, ht)
         chk('paper: arrow setup collapsed', pg.evaluate("document.querySelector('#tarwcard').tagName=='DETAILS'&&!document.querySelector('#tarwcard').open"))
         wi = pg.evaluate("[...document.querySelectorAll('#wi option')].map(o=>o.textContent)")
         chk('paper compound list', 'Rest up/down' in wi and 'Yoke twists (cam lean)' in wi and 'Plunger in/out (centre shot)' not in wi, wi)
@@ -103,14 +103,44 @@ try:
         [pg.click('[data-tear=r]') for _ in range(6)]; pg.wait_for_timeout(200)
         ht = pg.inner_text('#tearhint')
         chk('compound nock-right hint: rest left (Easton) or yoke', 'Nock right' in ht and 'move the rest to the left' in ht and 'yoke' in ht.lower(), ht)
-        # torque / dudley / group crosshair
-        for tune, lines, fn in [('Torque tune', 'v', '04-torque.png'), ('Dudley / yoke tune', 'h', '05-dudley.png'), ('Group tune', 'vh', '06-group.png')]:
+        # torque: left end + right end, What I changed, then both ends again
+        start(pg, 'Torque tune')
+        chk('Torque tune: vertical line', pg.get_attribute('#tface', 'data-lines') == 'v' and pg.get_attribute('#tface', 'data-sides') == '1')
+        chk('Torque tune: Torqued left and Torqued right', pg.locator('[data-side=L]').count() == 1 and pg.locator('[data-side=R]').count() == 1 and 'Torqued left' in pg.inner_text('#app') and 'Torqued right' in pg.inner_text('#app'))
+        chk('Torque tune: Before and After', pg.locator('[data-g=before]').count() == 1 and pg.locator('[data-g=after]').count() == 1)
+        chk('Torque tune: What I changed sits between the plot and the left-vs-right stats', pg.evaluate("(() => {const a=document.querySelector('#tface'),b=document.querySelector('#whatcard'),c=document.querySelector('#tqafter');return !!(a&&b&&c) && !!(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING) && !!(b.compareDocumentPosition(c)&Node.DOCUMENT_POSITION_FOLLOWING)})()"))
+        for fx, fy in [(0.35, 0.45), (0.33, 0.50), (0.36, 0.52)]: tap(pg, fx, fy)
+        Tq = cur(pg)
+        chk('torque: 3 before left', (((Tq.get('torque') or {}).get('before') or {}).get('L') or []).__len__() == 3, Tq.get('torque'))
+        pg.click('[data-side=R]'); pg.wait_for_timeout(200)
+        for fx, fy in [(0.65, 0.45), (0.67, 0.50), (0.64, 0.52)]: tap(pg, fx, fy)
+        Tq = cur(pg)
+        chk('torque: 3 before right, left kept', len(Tq['torque']['before']['L']) == 3 and len(Tq['torque']['before']['R']) == 3, Tq['torque'])
+        st = pg.inner_text('#tqstats')
+        chk('torque: four stats rows', 'Before · Torqued left' in st and 'Before · Torqued right' in st and 'After · Torqued left' in st and 'After · Torqued right' in st, st)
+        v = pg.inner_text('#torqueverdict')
+        chk('torque: before verdict asks for change then After', 'Log what you changed' in v and 'George' not in v and 'Ryles' not in v, v)
+        pg.locator('#whatcard').scroll_into_view_if_needed(); pg.click('#wadd'); pg.wait_for_timeout(200)
+        chk('torque: a change can be logged between Before and After', len(cur(pg).get('changes') or []) >= 1)
+        pg.click('[data-g=after]'); pg.wait_for_timeout(200)
+        pg.click('[data-side=L]'); pg.wait_for_timeout(150)
+        for fx, fy in [(0.47, 0.45), (0.48, 0.50), (0.46, 0.52)]: tap(pg, fx, fy)
+        pg.click('[data-side=R]'); pg.wait_for_timeout(150)
+        for fx, fy in [(0.53, 0.45), (0.54, 0.50), (0.52, 0.52)]: tap(pg, fx, fy)
+        Tq = cur(pg)
+        chk('torque: after both sides plotted', len(Tq['torque']['after']['L']) == 3 and len(Tq['torque']['after']['R']) == 3, Tq['torque'])
+        chk('torque: points are not stored on the old before/after lists', Tq.get('before') == [] and Tq.get('after') == [], Tq)
+        v = pg.inner_text('#torqueverdict')
+        chk('torque: after verdict closer together or on the line', ('closer together' in v or 'sit on the line' in v) and 'George' not in v and 'Ryles' not in v, v)
+        chk('torque: hint has no George', 'George' not in pg.inner_text('#app') and 'Ryles' not in pg.inner_text('#app') and 'torqued left' in pg.inner_text('#app').lower())
+        pg.locator('#tface').scroll_into_view_if_needed(); shot(pg, '04-torque.png')
+        for tune, lines, fn in [('Dudley / yoke tune', 'h', '05-dudley.png'), ('Group tune', 'vh', '06-group.png')]:
             start(pg, tune); chk(f'{tune}: crosshair lines={lines}', pg.get_attribute('#tface', 'data-lines') == lines)
             tap(pg, 0.6, 0.45); tap(pg, 0.55, 0.5); tap(pg, 0.62, 0.52)
             chk(f'{tune}: plotted 3', len(cur(pg)['before']) == 3)
             if tune == 'Dudley / yoke tune':
                 wi = pg.evaluate("[...document.querySelectorAll('#wi option')].map(o=>o.textContent)")
-                chk('Dudley list: George marks only on sight and rest', wi[0].endswith('(George)') and wi[1].endswith('(George)') and not wi[2].endswith('(George)'), wi)
+                chk('Dudley list: sight, rest, yoke; no George marks', wi[0].startswith('Sight left/right') and wi[1].startswith('Arrow rest left/right') and any('Yoke twists' in x for x in wi) and not any('George' in x or 'Ryles' in x for x in wi), wi)
             shot(pg, fn)
         # walk-back
         start(pg, 'Walk-back')
@@ -147,7 +177,32 @@ try:
         ft = pg.evaluate("(document.querySelector('#acfletch')||{}).textContent||''")
         chk('AC5: fletching suggestion, not from Park', 'Fletching suggestion' in ft and 'Not from Dr Park' in ft, ft[:120])
         chk('AC2: Easton parts listed', 'Easton' in t)
+        # Tune helper: setup first, then steps in Coach's order, compound / recurve toggle
+        pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(400)
+        th = pg.inner_text('#tunehelper')
+        chk('helper: compound default', pg.locator('[data-thbt=c][aria-pressed=true]').count() == 1)
+        steps = pg.evaluate("[...document.querySelectorAll('#thsteps b')].map(b=>b.textContent)")
+        chk('helper: compound order', steps == ['1. Bow setup', '2. Draw weight / spine', '3. Cut length', '4. Paper', '5. Node / nocking point', '6. Bare shaft', '7. Creep', '8. Torque', '9. Dudley'], steps)
+        chk('helper: compound has no George', 'George' not in th and 'Ryles' not in th)
+        pg.locator('#tunehelper').scroll_into_view_if_needed(); shot(pg, '10-tunehelper-compound.png')
+        pg.click('[data-tn=paper]'); pg.wait_for_timeout(400)
+        chk('helper: Paper opens the Paper tune form', pg.locator('#tc').count() == 1 and pg.input_value('#tc') == 'Paper tune')
+        pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
+        pg.click('[data-thbt=r]'); pg.wait_for_timeout(300)
+        steps = pg.evaluate("[...document.querySelectorAll('#thsteps b')].map(b=>b.textContent)")
+        chk('helper: recurve order', steps == ['1. Bow setup', '2. Draw weight / spine', '3. Cut length', '4. Paper (optional)', '5. Bare shaft', '6. Node / nocking point', '7. Walk-back', '8. Plunger spring / group tune'], steps)
+        th = pg.inner_text('#tunehelper')
+        chk('helper: recurve steps omit Torque and Dudley; creep is a form note', all('Torque' not in s and 'Dudley' not in s for s in steps) and 'form note' in th.lower() and 'George' not in th and 'Ryles' not in th, steps)
+        pg.locator('#tunehelper').scroll_into_view_if_needed(); shot(pg, '11-tunehelper-recurve.png')
+        pg.click('[data-tn=walk]'); pg.wait_for_timeout(400)
+        chk('helper: Walk-back opens the Walk-back form', pg.locator('#tc').count() == 1 and pg.input_value('#tc') == 'Walk-back')
+        pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
+        chk('helper: recurve toggle remembered', pg.locator('[data-thbt=r][aria-pressed=true]').count() == 1)
         chk('Lingkana keys untouched', pg.evaluate(LK) == lk0)
+        for fn in ('lab.js','lab.css','tune.js','arrowchooser.js'):
+            txt=open(os.path.join(ROOT,fn),encoding='utf-8').read().lower()
+            chk(fn+': no George/Ryles', 'george' not in txt and 'ryles' not in txt)
+
         chk('no page errors', not errs, errs)
         b.close()
 finally:

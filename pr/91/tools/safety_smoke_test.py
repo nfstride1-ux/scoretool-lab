@@ -100,9 +100,14 @@ def main():
             dismiss(page)
             chk('app loads with no JS errors', not app_errs, ' | '.join(app_errs[:3]))
             page.evaluate("""() => document.querySelector('#tabs button[data-v="score"]').click()""")
-            if page.locator('#nmlater').count():
-                page.click('#nmlater')
+            # the display-name prompt can open a moment after the Score tab (race seen in CI, 26 Nov 2026): wait for either, then 'Not now'
+            try: page.wait_for_selector('[data-cstp="casual"], #nmlater', state='attached', timeout=8000)
+            except Exception: pass
+            for _ in range(3):
+                if not page.locator('#nmlater').count(): break
+                page.click('#nmlater'); page.wait_for_timeout(200)
                 page.evaluate("""() => document.querySelector('#tabs button[data-v="score"]').click()""")
+                page.wait_for_timeout(300)
             page.wait_for_selector('[data-cstp="casual"]', state='attached', timeout=8000)
             page.locator('[data-cstp="casual"]').evaluate("b => b.click()")
             page.wait_for_selector('[data-csdisc="indoor"]')

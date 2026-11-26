@@ -4,6 +4,15 @@ Newest first. Each entry names the version tag shown in Settings.
 
 
 
+## v2026-11-26-1705-nogeorge: Tuning — no named attributions, two-way torque, Tune helper order
+- **No named attributions on Tune** (Nathe 26 Nov, about 4:50pm Perth: no references to George at all). What I changed lists, paper-tune hints and the how-to-read notes no longer name a person or mention seminar notes. The advice itself is unchanged. The Easton FOC source line in the Arrow chooser and Calculators now names the article and date only.
+- **Torque tune is two-way** (Nathe, about 4:50pm Perth): shoot one end torqued left and one end torqued right (Before), log What I changed, then shoot the same two ends again (After). The four groups have their own markers and stats rows. The verdict compares how far the left and right groups are apart before vs after (closer together, or both on the line, means the setup is more forgiving). Older torque sessions that only have Before / After still open unchanged.
+- **Tune helper is setup first, then the tuning steps in a row**, with a Compound / Recurve toggle (Nathe, and Archery Coach's order). Steps 1-3 are shared: Bow setup, Draw weight / spine, Cut length. Compound then goes Paper, Node / nocking point, Bare shaft, Creep, Torque, Dudley. Recurve then goes optional Paper, Bare shaft, Node / nocking point, Walk-back, Plunger spring / group tune (no Torque or Dudley; Creep is a form note). Each step opens the screen that already does that job.
+- Cache version is `v2026-11-26-1705-nogeorge`. Not merged until go-live.
+
+### Files
+lab.js, lab.css, tune.js, arrowchooser.js, test/arrowchooser.js, test/tune.js, tools/tuning_test.py, qa/defects.md, index.html, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
+
 ## v2026-11-26-0659-tuningpreview: Tuning sessions — tear keypad, crosshair, What I changed
 - **Test previews open everything** (Nathe 6:59am): on a scoretool-lab pull-request preview (`/scoretool-lab/pr/<n>/`) every Plus and Pro feature opens without a paid account. The live app's gating is unchanged (the check only matches that preview address).
 - **Past sessions can be deleted.** Each past tuning session has a Delete button, with a confirm ("Delete … from <date>? This can't be undone."). Cancel keeps it.
@@ -11,7 +20,7 @@ Newest first. Each entry names the version tag shown in Settings.
 - **Bow mismatch fixed:** a setup named "Hoyt concept x 40" showed "Bow specs: Concept X 37" because the specs saved on it came from another list entry. When a setup's name names a different bow on the list, that bow's published figures are used (Hoyt Concept X 40: IBO/ATA 327 fps, 40" axle to axle, 7.25" brace) and your own draw weight, draw length and let-off are kept. Fixed in the tuning form, the Arrow chooser and the Calculators. Saved specs are not rewritten.
 - **Paper tune:** no target face. A keypad of tear shapes laid out like the scoring pad (nock high-left, high, high-right / left, bullet hole, right / low-left, low, low-right). One tap per arrow, any number of arrows, with Undo and Clear. Shows the count per tear and fix hints for the most common tear (compound or recurve, right- or left-handed).
 - **Other tunes plot on a crosshair** (5 cm grid): Torque tune shows the vertical line only, Dudley / yoke tune the horizontal line only, Group tune and the rest both lines.
-- **What I changed** card on every session: what (dropdown), direction, amount and note, filtered by a Compound / Recurve switch. Lists from Archery Coach (26 Nov, about 6:13am Perth) for paper, bare shaft vs fletched, torque, Dudley / yoke, group and walk-back. Yoke twists can be logged without a rest move. Items are marked George only where Coach marked them.
+- **What I changed** card on every session: what (dropdown), direction, amount and note, filtered by a Compound / Recurve switch. Lists from Archery Coach (26 Nov, about 6:13am Perth) for paper, bare shaft vs fletched, torque, Dudley / yoke, group and walk-back. Yoke twists can be logged without a rest move.
 - **Arrow setup** (Before / After table) is now an optional section, closed unless you open it.
 - **Walk-back:** Easton's guide has no walk-back test, so the app doesn't say which way to move the plunger from a walk-back line. It quotes Easton's only in/out rule (broadheads, p. 12) and Easton's recurve rule to change spring tension only past setup (pp. 8, 14).
 - Bare shaft vs fletched (R3 verdict + next step) and Arrow chooser AC1-AC5 were already live; they are kept and re-checked here. The bare-shaft verdict now uses the session's Compound / Recurve switch.

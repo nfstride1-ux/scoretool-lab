@@ -30,7 +30,7 @@ P0 = must fix or decide before release. P1 = should fix. P2 = nice to have. One 
 - U2 Update banner never appears if the app is first loaded offline. Area: app shell. Evidence: audit A item 7. Status: OPEN.
 - L3 A bow with speed kind ATA fills the "IBO speed rating" box. Area: calculators. Evidence: audit B L3. Status: OPEN.
 - L4 Choosing a catalogue bow wipes a typed let-off, make or model; let-off not shown in the My bows summary. Area: bows.js. Evidence: audit B L4. Status: OPEN.
-- L5 Source line cites a named author (George Tekmitchov, June 2022) in the Arrow chooser and Calculators. Area: arrowchooser.js. Evidence: audit A and B. Status: OPEN, Nathe to decide whether it is a quote to remove.
+- L5 Source line cited a named author in the Arrow chooser and Calculators (Easton FOC article). Area: arrowchooser.js. Evidence: audit A and B. Status: CLOSED 26 Nov 2026. Nathe: no references to George at all; the citation now names the Easton article and date only.
 - L7 A My arrows row can show two FOC figures. Area: arrows. Evidence: audit B L7. Status: OPEN.
 - L8 Comma decimals typed by hand give whole-number estimates (sightest.js). Area: sight marks. Evidence: audit B L8 (from code). Status: OPEN.
 - L9 Tuning page says it gives no tuning advice, then shows a Next step to try card. Area: lab.js line 146. Evidence: audit B L9. Status: OPEN.
