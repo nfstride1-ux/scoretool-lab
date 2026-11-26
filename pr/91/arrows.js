@@ -36,14 +36,14 @@ function form(){const s=EDIT.s,b=window.arrowBuild?arrowBuild(s):null;
  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" id="masave">Save</button><button class="btn ghost" id="macancel">Cancel</button>${window.arrowSetup?'<button class="btn ghost" id="mafromac">Fill from Arrow chooser</button>':''}</div>
  <p class="small muted" id="mamsg" aria-live="polite" style="margin:6px 0 0"></p></div>`}
 E.lab_myarrows=function(){const L=window.myArrows();
- app.innerHTML=`<div class="labbar"><button class="btn ghost labback" data-go="myarch">‹ My archery</button><h1>My arrows</h1></div>
+ app.innerHTML=`<div class="labbar"><button class="btn ghost labback" data-go="tools">‹ Tools</button><h1>My arrows</h1></div>
  ${EDIT?form():''}
  <div class="card" id="malist"><span class="kicker">Saved</span>${L.length?L.map(o=>{const n=marksOn(o.id);return`<div class="marow" data-id="${h(o.id)}" style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)"><span class="i" aria-hidden="true">${ic('arrow')}</span><div style="flex:1"><b>${h(o.name)}</b><br><span class="small muted">${h(sum(o))||'no details yet'}</span>${window.arrowCalcLine&&arrowCalcLine(o)?`<br><span class="small macalc">${h(arrowCalcLine(o))}</span>`:''}${n?`<br><span class="small">${n}</span>`:''}</div><span style="display:flex;gap:6px"><button class="btn ghost" data-ed="${h(o.id)}" style="padding:6px 12px">Edit</button><button class="btn ghost" data-delset="${h(o.id)}" style="padding:6px 12px">Delete</button></span></div>`}).join('')
   :'<p class="muted">No arrow sets yet.</p>'}
   ${EDIT?'':'<button class="btn alt full" id="maadd" style="margin-top:10px">Add an arrow set</button>'}
   <p class="small muted" style="margin-top:8px">Add each arrow set once. The same list is the Arrow set choice in Setups &amp; sight marks, and each set keeps its own sight marks for each bow.</p></div>`;
  app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{EDIT=null;nav(b.dataset.go)});
- setTimeout(()=>document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v=='myarch')),0);
+ setTimeout(()=>document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v=='tools')),0);
  app.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{const a=list().find(x=>x.id==b.dataset.ed);if(!a)return;const s={};[...BASE,...EXTRA].forEach(k=>{const v={...a,...info(a.id)}[k];if(v!=null&&v!=='')s[k]=String(v)});EDIT={id:a.id,s};render();window.scrollTo(0,0)});
  app.querySelectorAll('[data-delset]').forEach(b=>b.onclick=()=>{const id=b.dataset.delset,a=list().find(x=>x.id===id);if(!a)return;if(!confirm('Delete this arrow set? This can\'t be undone. Deleting this arrow set also removes its sight marks for each bow.'))return;(S.bows||[]).forEach(bow=>{if(bow.archer!==S.profile)return;if(id==='arrows1')bow.marks={};else if(bow.setMarks)delete bow.setMarks[id]});S.arrowSets=(S.arrowSets||[]).filter(x=>!(x.id===id&&x.archer===S.profile));if(S.arrowInfo&&S.arrowInfo[S.profile])delete S.arrowInfo[S.profile][id];if(S.arrowSel&&S.arrowSel[S.profile]===id)delete S.arrowSel[S.profile];if(id==='arrows1'){S.arrowGone=S.arrowGone||{};(S.arrowGone[S.profile]=S.arrowGone[S.profile]||{})[id]=1}if(EDIT&&EDIT.id===id)EDIT=null;save();render()});
  const ad=$('#maadd');if(ad)ad.onclick=()=>{EDIT={id:null,s:{}};render();const n=$('#ma_name');if(n)n.focus()};
@@ -67,7 +67,7 @@ E.lab_myarrows=function(){const L=window.myArrows();
    Nothing is written until the archer picks a set. Old tuning sessions are never rewritten; a new session gets a snapshot. */
 const num=v=>{const x=parseFloat(String(v??'').replace(',','.'));return isFinite(x)?x:NaN};
 const sv=x=>String(Math.round(x*100)/100);
-const apick=(id,sel,lbl)=>{const L=window.myArrows();if(!L.length)return`<p class="small muted" id="${id}w" style="margin:0 0 8px">Add your arrows in <a href="#" data-myarr="1">My archery › My arrows</a> to fill these in.</p>`;
+const apick=(id,sel,lbl)=>{const L=window.myArrows();if(!L.length)return`<p class="small muted" id="${id}w" style="margin:0 0 8px">Add your arrows in <a href="#" data-myarr="1">Tools › Add arrows</a> to fill these in.</p>`;
  return`<div id="${id}w" style="margin:0 0 8px"><label for="${id}">${lbl}</label><select id="${id}"><option value="">None, I'll type them</option>${L.map(o=>`<option value="${h(o.id)}"${o.id==sel?' selected':''}>${h(o.name)}</option>`).join('')}</select></div>`};
 const bindA=()=>app.querySelectorAll('[data-myarr]').forEach(a=>a.onclick=e=>{e.preventDefault();EDIT=null;nav('lab_myarrows')});
 const note=(id,t)=>{const w=$('#'+id+'w');if(w&&t)w.insertAdjacentHTML('beforeend',`<p class="lab-note" id="${id}note" style="margin:6px 0 0">${h(t)}</p>`)};
@@ -97,8 +97,4 @@ const _ch=E.lab_chooser;if(_ch)E.lab_chooser=function(){_ch();const K='scoretool
 /* Arrow optimizer: a new session can carry a snapshot of a My arrows set (t.arrow, the same shape the Arrow setup card shows) */
 const snapOf=o=>({bow:'',name:o.name,setId:o.id,spine:o.spine?String(o.spine):'',model:o.shaft||'',len:isFinite(num(o.len))?num(o.len):null,pt:isFinite(num(o.pt))?num(o.pt):null,foc:o.foc,tw:o.weight||null,fps:isFinite(num(o.fps))?Math.round(num(o.fps)):null,fpsSrc:isFinite(num(o.fps))?'measured':''});
 window.arrowSnapOf=snapOf;/* the tuning form in lab.js has the one arrow picker (26 Nov 2026) */
-/* My archery menu: a My arrows row after My bows */
-const _ma=E.myarch;if(_ma)E.myarch=function(){_ma();const g=app.querySelector('[data-go=lab_mybows]')||app.querySelector('[data-go=lab_gear]');if(g&&!app.querySelector('[data-go=lab_myarrows]')){
- g.insertAdjacentHTML('afterend',`<button class="labrow" data-go="lab_myarrows"><span class="i" aria-hidden="true">${ic('arrow')}</span><span><b>My arrows</b><small>Each arrow set once: shaft, spine, length, weights, fletching and FOC</small></span><span class="go" aria-hidden="true">›</span></button>`);
- app.querySelector('[data-go=lab_myarrows]').onclick=()=>nav('lab_myarrows')}};
 })();

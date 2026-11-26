@@ -4,6 +4,16 @@ Newest first. Each entry names the version tag shown in Settings.
 
 
 
+## v2026-11-26-1722-tunetools: Tools — Add bow, Add arrows, then Tune; Sight marks in My archery
+- **Tools starts with the tuning flow** (Nathe, 26 Nov, about 5:15pm Perth): Add bow, then Add arrows, then Tune helper. Arrow chooser, Rounds, Rules and Import my data stay after that. Arrow optimizer still opens from Tune helper.
+- **Sight marks is not in Tools.** It stays in My archery only (same screen and data). The My archery menu now calls it Sight marks.
+- Tune helper's Bow setup step opens My bows (Add bow), not Sight marks. Empty-state links that said "My archery › Setups & sight marks" or "My archery › My bows / My arrows" now point at Tools › Add bow and Tools › Add arrows.
+- Tier gating is unchanged: Sight marks stays free; Add bow, Add arrows and Tune stay Pro.
+- Cache version is `v2026-11-26-1722-tunetools`. Not merged until go-live.
+
+### Files
+lab.js, tune.js, bows.js, arrows.js, plans.js, test/lab.js, test/tune.js, test/bows.js, test/arrows.js, tools/tuning_test.py, index.html, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
+
 ## v2026-11-26-1705-nogeorge: Tuning — no named attributions, two-way torque, Tune helper order
 - **No named attributions on Tune** (Nathe 26 Nov, about 4:50pm Perth: no references to George at all). What I changed lists, paper-tune hints and the how-to-read notes no longer name a person or mention seminar notes. The advice itself is unchanged. The Easton FOC source line in the Arrow chooser and Calculators now names the article and date only.
 - **Torque tune is two-way** (Nathe, about 4:50pm Perth): shoot one end torqued left and one end torqued right (Before), log What I changed, then shoot the same two ends again (After). The four groups have their own markers and stats rows. The verdict compares how far the left and right groups are apart before vs after (closer together, or both on the line, means the setup is more forgiving). Older torque sessions that only have Before / After still open unchanged.

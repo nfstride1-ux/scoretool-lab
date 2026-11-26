@@ -198,6 +198,22 @@ try:
         chk('helper: Walk-back opens the Walk-back form', pg.locator('#tc').count() == 1 and pg.input_value('#tc') == 'Walk-back')
         pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
         chk('helper: recurve toggle remembered', pg.locator('[data-thbt=r][aria-pressed=true]').count() == 1)
+        pg.click('[data-thbt=c]'); pg.wait_for_timeout(200)
+        pg.click('[data-tn=setup]'); pg.wait_for_timeout(400)
+        chk('helper: Bow setup opens My bows, not Sight marks', pg.evaluate('view')=='lab_mybows' and 'my bows' in pg.inner_text('.labbar h1').lower() and pg.locator('#gearcard').count()==0, pg.evaluate('view'))
+        back = pg.inner_text('.labback') if pg.locator('.labback').count() else ''
+        chk('my bows back goes to Tools', 'Tools' in back, back)
+        # Tools: Add bow, then Add arrows, then Tune; Sight marks lives in My archery
+        pg.evaluate("nav('tools')"); pg.wait_for_timeout(300)
+        tools = pg.evaluate("[...document.querySelectorAll('.labmenu .labrow')].map(b=>({go:b.dataset.go,t:b.querySelector('b').textContent}))")
+        chk('tools: first three are Add bow, Add arrows, Tune helper', [x['t'] for x in tools[:3]] == ['Add bow','Add arrows','Tune helper'] and [x['go'] for x in tools[:3]] == ['lab_mybows','lab_myarrows','lab_tune'], tools)
+        chk('tools: no Sight marks row', not any('sight' in (x['t'] or '').lower() or x['go']=='lab_gear' for x in tools), tools)
+        shot(pg, '12-tools.png')
+        pg.evaluate("nav('myarch')"); pg.wait_for_timeout(300)
+        mya = pg.evaluate("[...document.querySelectorAll('.labmenu .labrow')].map(b=>({go:b.dataset.go,t:b.querySelector('b').textContent}))")
+        chk('my archery: Sight marks stays here', any(x['go']=='lab_gear' and 'Sight marks' in x['t'] for x in mya), mya)
+        chk('my archery: no Add bow / Add arrows / Tune helper', not any(x['go'] in ('lab_mybows','lab_myarrows','lab_tune') for x in mya), mya)
+        shot(pg, '13-myarchery.png')
         chk('Lingkana keys untouched', pg.evaluate(LK) == lk0)
         for fn in ('lab.js','lab.css','tune.js','arrowchooser.js'):
             txt=open(os.path.join(ROOT,fn),encoding='utf-8').read().lower()

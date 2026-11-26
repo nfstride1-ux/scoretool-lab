@@ -195,7 +195,7 @@ nav=function(v){
  const need=PRO.has(v)?'pro':PLUS.has(v)?'plus':null;
  if(need&&!tierHas(need)){
   view=v;$('#tabs').hidden=false;
-  const sec={stats:'myarch',analytics:'myarch',lab_analysis:'myarch',diary:'myarch',lab_diary:'myarch',lab_squad:'clubs',squad:'clubs',lab_group:'clubs',lab_mybows:'myarch',lab_myarrows:'myarch',lab_chooser:'tools',lab_tune:'tools',lab_opt:'tools',lab_calc:'tools'}[v]||'home';
+  const sec={stats:'myarch',analytics:'myarch',lab_analysis:'myarch',diary:'myarch',lab_diary:'myarch',lab_squad:'clubs',squad:'clubs',lab_group:'clubs',lab_mybows:'tools',lab_myarrows:'tools',lab_chooser:'tools',lab_tune:'tools',lab_opt:'tools',lab_calc:'tools'}[v]||'home';
   document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===sec?'true':'false'));
   app.innerHTML=`<div class="card" id="tierlock"><span class="kicker">Plan</span><h2>Available on ${need==='pro'?'Pro':'Plus'}</h2><button class="btn" id="tierplans" type="button">See plans</button></div><button class="btn ghost" id="tierback" type="button">Back</button>`;
   document.getElementById('tierplans').onclick=()=>nav('plans');

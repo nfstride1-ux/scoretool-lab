@@ -18,7 +18,14 @@ const bname=(b,s)=>s&&(s.make||s.model)?[s.make,s.model].filter(Boolean).join(' 
 const fnum=v=>{const x=parseFloat(String(v??'').replace(',','.'));return isFinite(x)?x:NaN};
 const KL=k=>k=='ATA'?'ATA':k=='IBO/ATA'?'IBO/ATA':k=='actual'?'Measured':k===''?'Speed':'IBO';
 const sum=s=>[s.type=='recurve'?[s.riserLen?s.riserLen+'" riser':'',s.limbLb?s.limbLb+' lb limbs':''].filter(Boolean).join(' · '):(s.speed?KL(s.kind??'IBO')+' '+s.speed+' fps':''),s.dw?s.dw+' lb':'',s.dl?s.dl+'"':''].filter(Boolean).join(' · ')||'no figures yet';
-window.bowSnap=id=>{const b=mine().find(x=>x.id==id),s=b&&specs()[id];if(!s)return null;
+/* 26 Nov 2026 (Nathe): a setup named 'Hoyt concept x 40' showed 'Bow specs: Concept X 37' because the specs saved on it came from
+   another list entry. When the setup's own name names a different bow on the list (whole words, longest match), that entry's published
+   figures are shown and used, and the archer's own draw weight, draw length and let-off are kept. Saved specs are not rewritten. */
+function fixSpec(b,s){if(!b||!s||!s.specId||!LIST)return s;const n=' '+norm(b.name)+' ';
+ const hit=LIST.filter(x=>x.model&&n.includes(' '+norm(x.model)+' ')).sort((p,q)=>q.model.length-p.model.length)[0];
+ if(!hit||hit.id==s.specId)return s;return Object.assign({},fromList(hit),{dw:s.dw||'',dl:s.dl||'',lo:s.lo||hit.lo||'',fixedFrom:[s.make,s.model].filter(Boolean).join(' ')})}
+const rspec=id=>fixSpec(mine().find(x=>x.id==id),specs()[id]);
+window.bowSnap=id=>{const b=mine().find(x=>x.id==id),s=b&&rspec(id);if(!s)return null;
  return{setup:id,name:bname(b,s),type:s.type||'compound',make:s.make||'',model:s.model||'',year:s.year||'',speed:s.speed||'',kind:s.kind??'IBO',bh:s.bh||'',ata:s.ata||'',dw:s.dw||'',dl:s.dl||'',lo:s.lo||'',limbLb:s.limbLb||'',limbLen:s.limbLen||'',riser:s.riser||'',limbs:s.limbs||'',riserLen:s.riserLen||'',fit:s.fit||'',url:s.url||''}};
 /* bows the archer has already named (setup names, setup diary, tuning sessions) that are on the list and have no specs yet */
 function named(){if(!LIST)return[];const me=S.profile,txt=[...mine().filter(b=>!specs()[b.id]).map(b=>b.name),...(S.setup||[]).filter(x=>x.archer==me).map(x=>x.bow),...(S.tune||[]).filter(x=>x.archer==me).map(x=>x.bowName)].filter(Boolean).map(x=>String(x).toLowerCase());
@@ -69,18 +76,19 @@ function form(){const s=EDIT.s,rec=s.type=='recurve',k=s.kind??'IBO';
   ${F('bh','Brace height','inches')+F('ata','Axle-to-axle','inches')+F('dw','Your draw weight','lb',s.dwRange?'published: '+s.dwRange:'e.g. 60')+F('dl','Your draw length','inches',s.dlRange?'published: '+s.dlRange:'e.g. 29')+F('lo','Let-off','%',s.lo?'':'')}`}
  <div class="row" style="gap:8px;margin-top:10px"><button class="btn" id="mbsave">Save bow</button><button class="btn ghost" id="mbcancel">Cancel</button></div></div>`}
 E.lab_mybows=function(){const L=withSpec(),N=named();
- app.innerHTML=`<div class="labbar"><button class="btn ghost labback" data-go="myarch">‹ My archery</button><h1>My bows</h1></div>
+ app.innerHTML=`<div class="labbar"><button class="btn ghost labback" data-go="tools">‹ Tools</button><h1>My bows</h1></div>
  ${N.map(([k,V])=>`<div class="card mbsug"><span class="kicker">From your setups</span><h2 style="margin:2px 0 8px">Add your ${h(k)}</h2><div class="row" style="gap:8px;flex-wrap:wrap">${V.map(x=>`<button class="btn" data-sug="${x.id}" data-fam="${h(x.fam)}">${V.length>1?h(x.model):'Add your '+h(k)}</button>`).join('')}</div><p class="small muted" style="margin:8px 0 0">One tap adds its published specs. You then add your own draw weight and length.</p></div>`).join('')}
  ${EDIT?form():''}
- <div class="card"><span class="kicker">Saved</span>${L.length?L.map(b=>{const s=specs()[b.id];return`<div class="mbrow" style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)"><span class="i" aria-hidden="true">${ic('bow')}</span><div style="flex:1"><b>${h(bname(b,s))}</b>${s.year?` <span class="muted small">${h(s.year)}</span>`:''}<br><span class="small muted">${h(sum(s))}</span>${[[s.url,'Specs source'],[s.riserUrl,'Riser specs'],[s.limbUrl,'Limb specs']].filter(([u])=>u).map(([u,l])=>`<br><a class="small" href="${h(u)}" target="_blank" rel="noopener">${l}</a>`).join('')}</div><button class="btn ghost" data-ed="${b.id}" style="padding:6px 12px">Edit</button></div>`}).join('')
+ <div class="card"><span class="kicker">Saved</span>${L.length?L.map(b=>{const s=specs()[b.id];return`<div class="mbrow" style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)"><span class="i" aria-hidden="true">${ic('bow')}</span><div style="flex:1"><b>${h(bname(b,s))}</b>${s.year?` <span class="muted small">${h(s.year)}</span>`:''}<br><span class="small muted">${h(sum(s))}</span>${[[s.url,'Specs source'],[s.riserUrl,'Riser specs'],[s.limbUrl,'Limb specs']].filter(([u])=>u).map(([u,l])=>`<br><a class="small" href="${h(u)}" target="_blank" rel="noopener">${l}</a>`).join('')}</div><span style="display:flex;gap:6px"><button class="btn ghost" data-ed="${b.id}" style="padding:6px 12px">Edit</button><button class="btn ghost" data-delbow="${b.id}" style="padding:6px 12px">Delete</button></span></div>`}).join('')
   :'<p class="muted">No bows yet.</p>'}
   ${EDIT?'':'<button class="btn alt full" id="mbadd" style="margin-top:10px">Add a bow</button>'}
   <p class="small muted" style="margin-top:8px">Each bow is one of your setups, so its sight marks stay in Setups &amp; sight marks. Pick it in the Arrow chooser, Calculators or a new tuning session to fill in its speed, draw weight and draw length.</p></div>
  ${SKIP.length?`<details class="small muted"><summary>Not on the list yet</summary><ul>${SKIP.map(x=>`<li>${h(x)}</li>`).join('')}</ul></details>`:''}`;
  app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{EDIT=null;nav(b.dataset.go)});
- setTimeout(()=>document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v=='myarch')),0);
+ setTimeout(()=>document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v=='tools')),0);
  app.querySelectorAll('[data-sug]').forEach(b=>b.onclick=()=>{const x=LIST.find(y=>y.id==b.dataset.sug);const id=addBow(fromList(x),b.dataset.fam);EDIT={id,s:{...specs()[id]}};render();const f=$('#mb_dw');if(f)f.focus()});
  app.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{EDIT={id:b.dataset.ed,s:{...specs()[b.dataset.ed]}};render()});
+ app.querySelectorAll('[data-delbow]').forEach(b=>b.onclick=()=>{const id=b.dataset.delbow,bow=mine().find(x=>x.id===id);if(!bow)return;const s=specs()[id];if(!confirm('Delete this bow? This can\'t be undone. Deleting this bow also removes its sight marks.'))return;S.bows=(S.bows||[]).filter(x=>x.id!==id);if(specs()[id])delete specs()[id];if(S.bowSel&&S.bowSel[S.profile]===id)delete S.bowSel[S.profile];if(EDIT&&EDIT.id===id)EDIT=null;save();render()});
  const ad=$('#mbadd');if(ad)ad.onclick=()=>{EDIT={id:null,s:{type:'compound'}};render()};
  if(!EDIT)return;
  const grab=()=>app.querySelectorAll('[data-f]').forEach(i=>EDIT.s[i.dataset.f]=i.value.trim());
@@ -98,14 +106,9 @@ E.lab_mybows=function(){const L=withSpec(),N=named();
  $('#mbsave').onclick=()=>{grab();const s=EDIT.s;if(s.type=='recurve'){s.make=s.riser||'';s.model=s.limbs||'';s.limbLen=s.limbLen||''}
   if(EDIT.id){specs()[EDIT.id]=s;save()}else addBow(s,'');EDIT=null;render()}};
 
-/* My archery menu: a My bows row after Setups & sight marks */
-const _ma=E.myarch;if(_ma)E.myarch=function(){_ma();const g=app.querySelector('[data-go=lab_gear]');if(g&&!app.querySelector('[data-go=lab_mybows]')){
- g.insertAdjacentHTML('afterend',`<button class="labrow" data-go="lab_mybows"><span class="i" aria-hidden="true">${ic('bow')}</span><span><b>My bows</b><small>Make, model and specs for each bow, from the maker's page</small></span><span class="go" aria-hidden="true">›</span></button>`);
- app.querySelector('[data-go=lab_mybows]').onclick=()=>nav('lab_mybows')}};
-
 /* a 'Saved bow' picker that fills boxes; the archer can still change any of them afterwards */
-const picker=(id,sel,lbl)=>{const L=withSpec();if(!L.length)return`<p class="small muted" id="${id}w" style="margin:0 0 8px">Save your bow in <a href="#" data-mb="1">My archery › My bows</a> to fill these in.</p>`;
- return`<div id="${id}w" style="margin:0 0 8px"><label for="${id}">${lbl}</label><select id="${id}"><option value="">None, I'll type them</option>${L.map(b=>`<option value="${b.id}"${b.id==sel?' selected':''}>${h(bname(b,specs()[b.id]))}</option>`).join('')}</select></div>`};
+const picker=(id,sel,lbl)=>{const L=withSpec();if(!L.length)return`<p class="small muted" id="${id}w" style="margin:0 0 8px">Save your bow in <a href="#" data-mb="1">Tools › Add bow</a> to fill these in.</p>`;
+ return`<div id="${id}w" style="margin:0 0 8px"><label for="${id}">${lbl}</label><select id="${id}"><option value="">None, I'll type them</option>${L.map(b=>`<option value="${b.id}"${b.id==sel?' selected':''}>${h(bname(b,rspec(b.id)))}</option>`).join('')}</select></div>`};
 /* AC1: the bow the Arrow chooser uses. bowId undefined = follow the current saved bow (the one picked in Setups & sight marks);
    '' = none (the archer types); an id = that bow. Blank boxes come from the bow each time; typed boxes win. */
 const curId=()=>{const L=mine(),sel=(S.bowSel||{})[S.profile],b=L.find(x=>x.id==sel)||L[0];return b?b.id:''};
@@ -118,7 +121,7 @@ window.acBowFill=R=>{const id=acId(R),s=id?bowSnap(id):null,o=Object.assign({},R
  o._bow={id,name:s.name,got,kind:s.kind,speed:s.speed,auto:R.bowId===undefined};return o};
 window.curSavedBow=()=>{const id=curId();return id?bowSnap(id):null};
 const acPicker=sel=>{const A=mine();if(!A.length)return picker('ac_mybow',sel,'Saved bow');
- return`<div id="ac_myboww" style="margin:0 0 8px"><label for="ac_mybow">Saved bow</label><select id="ac_mybow"><option value=""${sel===''?' selected':''}>None, I'll type them</option>${A.map(b=>{const s=specs()[b.id];return`<option value="${b.id}"${b.id==sel?' selected':''}>${h(bname(b,s))}${s?'':' (no specs yet)'}</option>`}).join('')}</select></div>`};
+ return`<div id="ac_myboww" style="margin:0 0 8px"><label for="ac_mybow">Saved bow</label><select id="ac_mybow"><option value=""${sel===''?' selected':''}>None, I'll type them</option>${A.map(b=>{const s=rspec(b.id);return`<option value="${b.id}"${b.id==sel?' selected':''}>${h(bname(b,s))}${s?'':' (no specs yet)'}</option>`}).join('')}</select></div>`};
 const KN={IBO:'IBO','IBO/ATA':'IBO/ATA',ATA:'ATA',actual:'measured','':'standard not stated'};
 const bindMb=()=>app.querySelectorAll('[data-mb]').forEach(a=>a.onclick=e=>{e.preventDefault();nav('lab_mybows')});
 const filled=(s,keys)=>keys.filter(([k])=>s[k]).map(([,l])=>l);
@@ -129,7 +132,7 @@ const _ch=E.lab_chooser;if(_ch)E.lab_chooser=function(){_ch();const K='scoretool
  const card=app.querySelector('.acf');if(!card)return;const k=card.querySelector('h2');
  const sel=acId(R),F=acBowFill(R)._bow,b0=sel&&mine().find(x=>x.id==sel);
  const line=F?`${F.auto?'Using your current bow':'Using'}, ${h(F.name)}${F.got.length?': '+F.got.join(', ')+' filled in':''}${F.got.includes('speed rating')?` (${h(KN[F.kind]??'IBO')} ${h(F.speed)} fps${F.kind=='ATA'?', which reads lower than IBO':''})`:''}. Type in a box to change it; clear the box to go back to the bow's figure.`
-  :b0&&!specs()[sel]?`No specs saved for ${h(b0.name)} yet. Add them in <a href="#" data-mb="1">My archery › My bows</a> to fill these in.`:'';
+  :b0&&!specs()[sel]?`No specs saved for ${h(b0.name)} yet. Add them in <a href="#" data-mb="1">Tools › Add bow</a> to fill these in.`:'';
  k.insertAdjacentHTML('afterend',acPicker(sel)+(window._mbNote?`<p class="lab-note" id="mbnote">${h(window._mbNote)}</p>`:'')+(line?`<p class="small muted" id="acbowline" style="margin:0 0 8px">${line}</p>`:''));window._mbNote=null;bindMb();
  const p=$('#ac_mybow');if(p)p.onchange=()=>{const s=bowSnap(p.value);
   if(!p.value){const C=acBowFill(R);['bow','dw','dl','ibo'].forEach(x=>{if(blank(R[x])&&!blank(C[x]))R[x]=C[x]})}
@@ -145,9 +148,5 @@ const _ca=E.lab_calc;if(_ca)E.lab_calc=function(){_ca();const C=S.calc||{};const
  first.insertAdjacentHTML('afterend',picker('c_mybow',C.bowId,'Saved bow'));bindMb();
  const p=$('#c_mybow');if(p)p.onchange=()=>{const s=bowSnap(p.value);C.bowId=p.value;if(s){if(s.type=='compound'&&s.speed)C.ibo=s.speed;if(s.dw)C.dw=s.dw;if(s.dl)C.dl=s.dl;C.spdOn=1}S.calc=C;save();render()}};
 
-/* Tuning: new sessions only get a snapshot of the chosen bow */
-const _op=E.lab_opt;if(_op)E.lab_opt=function(){if(typeof seedBows=='function')seedBows();_op();const go=$('#tgo');if(!go)return;const cb=typeof curBow=='function'&&curBow();
- go.insertAdjacentHTML('beforebegin',picker('t_mybow',cb&&specs()[cb.id]?cb.id:'','Bow specs for this session'));bindMb();
- const o=go.onclick;go.onclick=function(){const p=$('#t_mybow'),snap=p&&p.value?bowSnap(p.value):null;const n0=(S.tune||[]).length;o.apply(this,arguments);
-  if(snap&&(S.tune||[]).length>n0){const t=S.tune[S.tune.length-1];if(t&&t.id==S._tuneId&&!t.bowSpec){t.bowSpec=snap;save();render()}}}};
+/* Tuning (26 Nov 2026): the new-session form in lab.js has its own single bow picker and saves bowSnap() itself. */
 })();

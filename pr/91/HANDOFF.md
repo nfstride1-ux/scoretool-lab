@@ -4,6 +4,14 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 26 Nov 2026, 17:22 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: Branch `cursor/tuning-overhaul` (cache `v2026-11-26-1722-tunetools`), PR #91. Nathe t1227u (and t1226u): Sight marks is not in the tune section; it stays in My archery (data and gating unchanged). Tools now starts Add bow (My bows), then Add arrows (My arrows), then Tune helper. Bow setup in Tune helper opens My bows, not Sight marks. Back buttons and the plan-lock tab for those screens now go to Tools. Empty-state links updated.
+- Tests: tools/tuning_test.py 70/70, tools/tier_gate_test.py 195/195, safety-smoke 15/15, privacy-scan pass. Gating unchanged (lab_gear free; lab_mybows, lab_myarrows, lab_tune Pro).
+- Half-done: PR only, not merged. Needs Nathe's "go". Preview at pr/91 to be republished with this cache (score-load overlay from pr/92 kept).
+- Screenshots: /workspace/st-tuning/12-tools.png and /workspace/st-tuning/13-myarchery.png.
+
 ## 26 Nov 2026, 17:05 AWST — [Jarvis]
 
 - Who: Jarvis.

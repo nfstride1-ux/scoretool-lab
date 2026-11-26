@@ -6,7 +6,7 @@ const E=window.EXTRA_VIEWS=window.EXTRA_VIEWS||{};
 const h=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY='scoretool.tunehelper.bt';
 const COMPOUND=[
- ['setup','Bow setup','Set draw length, draw weight, cam timing and a level nock, with the rest centred.','gear',null],
+ ['setup','Bow setup','Set draw length, draw weight, cam timing and a level nock, with the rest centred.','bows',null],
  ['spine','Draw weight / spine','Pick the spine from the maker\'s chart at your final draw weight, length and point weight.','calc',null],
  ['cut','Cut length','Cut to the shortest safe length, about 1 in past the rest at full draw.','cut',null],
  ['paper','Paper','Shoot through paper at about 4-6 ft and fix gross tears.','opt','Paper tune'],
@@ -17,7 +17,7 @@ const COMPOUND=[
  ['dudley','Dudley','Use the sight for left/right up close and the rest for left/right at long range.','opt','Dudley / yoke tune']
 ];
 const RECURVE=[
- ['setup','Bow setup','Set brace height, tiller, limb-bolt weight, a starting nocking point, and centre shot with the plunger.','gear',null],
+ ['setup','Bow setup','Set brace height, tiller, limb-bolt weight, a starting nocking point, and centre shot with the plunger.','bows',null],
  ['spine','Draw weight / spine','Use the chart for the weight at your draw length, not the limb marking, plus point weight.','calc',null],
  ['cut','Cut length','Leave about 1 in past the plunger at full draw, or cut to suit the clicker.','cut',null],
  ['paper','Paper (optional)','A quick flight check at about 4-6 ft, before bare shaft. Less reliable with fingers than bare shaft.','opt','Paper tune'],
@@ -35,7 +35,7 @@ function setBt(bt){try{localStorage.setItem(KEY,bt)}catch(e){}}
 function go(s){
  if(s[3]=='opt'){window._tunePref=s[4];nav('lab_opt')}
  else if(s[3]=='calc')nav('lab_calc');
- else if(s[3]=='gear')nav('lab_gear');
+ else if(s[3]=='bows')nav('lab_mybows');
  else if(window.acGo)acGo('cut');else nav('lab_chooser');
 }
 E.lab_tune=function(){

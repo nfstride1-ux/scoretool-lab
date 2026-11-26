@@ -84,7 +84,7 @@ E.myarch=()=>menu('My archery',[
  row('lab_latest','⭐','Latest shoot','How your last shoot went, wins of the day, notes'),
  row('lab_arrows','➕','Practice arrows','Today\'s arrow count and weekly progress'),
  row('lab_diary','📝','Diary','Shooting diary in your own words'),
- row('lab_gear','🏹','Setups & sight marks','Bow setups, sight marks by distance, scores per setup'),
+ row('lab_gear','🎯','Sight marks','Sight marks by distance, scores per setup'),
  row('lab_ranks','🏅','Rankings & classification','Real AA rankings and classification progress')]);
 sub('lab_latest','myarch','Latest shoot','myarch','My archery',()=>_home(),(e,t,i)=>i<3||/FROM YOUR NOTES/.test(t));
 sub('lab_arrows','myarch','Practice arrows','myarch','My archery',()=>_home(),(e,t,i)=>i==0||/TODAY'S ARROWS/.test(t));
@@ -94,7 +94,7 @@ sub('lab_ranks','myarch','Rankings & classification','myarch','My archery',()=>E
  const html=aaRankCard((typeof S!='undefined'&&S&&S.profile)||'');
  const anchor=document.getElementById('realrank')||document.getElementById('c-class')||document.getElementById('rankcard');
  if(anchor)anchor.insertAdjacentHTML('afterend',html);else app.insertAdjacentHTML('afterbegin',html)});
-sub('lab_gear','myarch','Setups & sight marks','myarch','My archery',()=>diary(),(e,t)=>e.id=='gearcard'||/BOW & SETUP DIARY|CURRENT SETUP/.test(t),()=>{app.insertAdjacentHTML('beforeend',setupScores())});
+sub('lab_gear','myarch','Sight marks','myarch','My archery',()=>diary(),(e,t)=>e.id=='gearcard'||/BOW & SETUP DIARY|CURRENT SETUP/.test(t),()=>{app.insertAdjacentHTML('beforeend',setupScores())});
 function setupScores(){const L=(typeof myBows=='function'?myBows():[]);if(!L.length)return'';
  const ss=(S.sessions||[]).filter(s=>s.bow&&!s.sample&&typeof isDone=='function'&&isDone(s));
  const rows=L.map(b=>{const m=ss.filter(s=>s.bow==b.id);if(!m.length)return`<tr><th>${h(b.name)}</th><td colspan="3" class="muted">No rounds scored with this setup yet</td></tr>`;
@@ -136,6 +136,8 @@ sub('lab_settings','me','Settings & help','lab_me','Me',()=>me(),(e,t)=>['settin
 /* ---------- Tools ---------- */
 LABSEC.tools='tools';
 E.tools=()=>menu('Tools',[
+ row('lab_mybows','🏹','Add bow','Save a bow and its specs, then pick it when you tune'),
+ row('lab_myarrows','➡️','Add arrows','Save each arrow set once: shaft, spine, length, weights, fletching and FOC'),
  row('lab_tune','🎯','Tune helper','Setup first, then the tuning steps in order (compound or recurve)'),
  row('lab_chooser','🏹','Arrow chooser','Starting spine and cut length from the makers\' charts, FOC and point weight'),
  row('lab_rounds','◎','Rounds','Distances and faces when a club names the round'),
@@ -145,6 +147,7 @@ LABSEC.lab_mydata='tools';if(window.MYDATA_VIEW)E.lab_mydata=window.MYDATA_VIEW;
 
 /* Arrow optimizer: groups on a plain tuning face. Before = blue circles, After = black squares (shape and colour both differ). */
 LABSEC.lab_opt='tools';LABSEC.lab_chooser='tools';LABSEC.lab_tune='tools';LABSEC.lab_rounds='tools';
+LABSEC.lab_mybows='tools';LABSEC.lab_myarrows='tools';
 /* Schedule 9A reference: searchable list, tap a name for the distances and faces. Nothing here is saved. */
 E.lab_rounds=function(){const esc=h;app.innerHTML=`<p class="small" id="aaintro">Clubs often name the round and leave out the distances and the face. Tap a name to see them.</p><label class="small" for="aaq">Find a round</label><input id="aaq" type="search" enterkeyhint="search" autocomplete="off" placeholder="Name, distance or face" value="${esc(window._aaQ||'')}"><div id="aalist"></div><p class="small muted" id="aacite">${esc(window.AA_CITE||'')}. In that table, + is the 122 cm face and * is the 80 cm face.</p><p class="small muted">${esc(window.AA_NOTE||'')} Those are not listed here until a club names them.</p>`;
  bar('Rounds','tools','Tools');
@@ -269,7 +272,7 @@ E.lab_opt=function(){S.tune=S.tune||[];const mine=S.tune.filter(t=>t.archer==S.p
   <div><label for="tn">Name</label><input id="tn" placeholder="e.g. Paper tune after new rest"></div>
   <div><label for="td">Distance</label><input id="td" placeholder="e.g. 18m or 20yd"></div>
   <div><label>Bow type</label><div class="labseg" role="group" aria-label="Bow type" id="tbt"><button data-nbt="c" aria-pressed="${!(snap0&&snap0.type!='compound')}">Compound</button><button data-nbt="r" aria-pressed="${!!(snap0&&snap0.type!='compound')}">Recurve</button></div></div>
-  <div><label for="t_mybow">Bow</label>${bows.length?`<select id="t_mybow"><option value="">None</option>${bows.map(bopt).join('')}</select>`:`<p class="small muted" id="t_mybow_none" style="margin:4px 0">No bow saved yet. Add one in My archery › Setups &amp; sight marks.</p>`}<p class="small muted" id="t_bowline" style="margin:4px 0 0">${h(bowLine(cb&&cb.id))}</p></div>
+  <div><label for="t_mybow">Bow</label>${bows.length?`<select id="t_mybow"><option value="">None</option>${bows.map(bopt).join('')}</select>`:`<p class="small muted" id="t_mybow_none" style="margin:4px 0">No bow saved yet. Add one in Tools › Add bow.</p>`}<p class="small muted" id="t_bowline" style="margin:4px 0 0">${h(bowLine(cb&&cb.id))}</p></div>
   <div><label for="t_myarr">Arrows</label><select id="t_myarr"><option value="">None</option>${acs?`<option value="ac"${sdef=='ac'?' selected':''}>Arrow chooser: ${h(arwSum(acs))}</option>`:''}${sets.map(a=>`<option value="${h(a.id)}"${a.id==sdef?' selected':''}>${h(a.name||'Arrows')}</option>`).join('')}</select></div>
   <div id="thandw"><label for="thand">Bow hand</label><select id="thand"><option value="R">Right-handed archer</option><option value="L">Left-handed archer</option></select></div></div>
   <button class="btn alt full" id="tgo" style="margin-top:8px">Start</button></div>
