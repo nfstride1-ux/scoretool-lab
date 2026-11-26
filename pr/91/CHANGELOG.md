@@ -4,6 +4,15 @@ Newest first. Each entry names the version tag shown in Settings.
 
 
 
+## v2026-11-26-1755-tuneopen: Tune helper opens the right test; Dudley renamed Walk back tune
+- **Tune helper opens the matching new session** (Nathe, 26 Nov, about 5:46pm Perth: clicking Paper, or any other tuning step, was opening an already-open Torque session). Each step now starts a new session of that type (Paper keypad, Bare shaft Fletched/Bare, Torque left/right, Walk back tune, Group tune). If you already have an unfinished session of the same type, that is offered, but the screen you land on is the new one. An unrelated open session is never reopened.
+- **Old Torque sessions** that only had Before/After points now show the two-way Torqued left / Torqued right controls. Existing points are kept as the left groups.
+- **Dudley is now Walk back tune** (Nathe, about 5:47pm Perth). The compound Tune helper step, the session type, and the picker all use that name. Recurve Walk-back uses the same label. Older sessions saved as "Dudley / yoke tune" or "Walk-back" still open, and are shown as Walk back tune. Compound Walk back tune keeps the close/far sight-and-rest test (horizontal line); recurve Walk back tune keeps the plunger walk-back (both lines).
+- Cache version is `v2026-11-26-1755-tuneopen`. Not merged until go-live.
+
+### Files
+lab.js, tune.js, test/lab.js, test/tune.js, tools/tuning_test.py, index.html, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
+
 ## v2026-11-26-1722-tunetools: Tools — Add bow, Add arrows, then Tune; Sight marks in My archery
 - **Tools starts with the tuning flow** (Nathe, 26 Nov, about 5:15pm Perth): Add bow, then Add arrows, then Tune helper. Arrow chooser, Rounds, Rules and Import my data stay after that. Arrow optimizer still opens from Tune helper.
 - **Sight marks is not in Tools.** It stays in My archery only (same screen and data). The My archery menu now calls it Sight marks.

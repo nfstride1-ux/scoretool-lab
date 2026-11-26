@@ -4,6 +4,15 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 26 Nov 2026, 17:55 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: Branch `cursor/tuning-overhaul` (cache `v2026-11-26-1755-tuneopen`), PR #91. Nathe t1228u: Tune helper was reopening whatever session was already open (his Torque tune), so Paper and every other step showed the wrong test. Each helper step now starts a new session of the matching type. A matching unfinished session is offered, default is the new one. Unrelated sessions are never reopened. Old Torque sessions without the two-way fields now get Torqued left/right (existing points kept as the left groups).
+- Also t1229u: every user-visible "Dudley" / "Dudley / yoke tune" is now "Walk back tune". Recurve Walk-back uses the same label. Old saved sessions still open under the new name. Compound keeps the close/far horizontal-line test; recurve keeps the plunger walk-back.
+- Tests: tools/tuning_test.py 87/87, safety-smoke 15/15, privacy-scan pass. Gating unchanged (tier_gate not rerun; no plans.js/gating change this commit).
+- Half-done: PR only, not merged. Needs Nathe's "go". Preview at pr/91 to be republished with this cache (score-load overlay from pr/92 kept).
+- Screenshots: /workspace/st-tuning/14-paper-helper.png and /workspace/st-tuning/15-torque-helper.png (plus live preview shots after republish).
+
 ## 26 Nov 2026, 17:22 AWST — [Jarvis]
 
 - Who: Jarvis.

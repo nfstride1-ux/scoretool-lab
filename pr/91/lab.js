@@ -156,13 +156,13 @@ E.lab_rounds=function(){const esc=h;app.innerHTML=`<p class="small" id="aaintro"
 /* Tuning sessions (26 Nov 2026, Nathe via Grok Bot, "Yes, build the tuning preview"):
    - one bow picker and one arrow picker on a new session (the 'Use my arrow setup' tick box and the Face choice are gone);
    - Paper tune is a keypad of tear shapes laid out like the scoring pad, one tap per arrow, any number of arrows;
-   - every other tune plots on a crosshair: Torque = vertical line only, Dudley = horizontal line only, the rest both lines;
+   - every other tune plots on a crosshair: Torque = vertical line only, compound Walk back tune (close/far) = horizontal line only, the rest both lines;
    - 'What I changed' per tune: item + direction + amount + note, filtered by a Compound / Recurve switch (lists from Archery Coach,
      26 Nov ~6:13am Perth), with tear-to-fix hints on Paper tune;
    - the Arrow setup table is an optional, closed section; past sessions can be deleted (with a confirm).
    Stored data: new sessions add their own fields (bt, span, paper, changes, bowSpec, arrow). Old sessions keep their face and plots
    and are shown on the crosshair at their old face's scale; nothing old is rewritten. Lingkana data is never read or written here. */
-const TUNES=['Paper tune','Bare shaft vs fletched','Torque tune','Dudley / yoke tune','Group tune','Walk-back','Just a group','Other'];
+const TUNES=['Paper tune','Bare shaft vs fletched','Torque tune','Walk back tune','Group tune','Just a group','Other'];
 const FACES={'40cm':20,'60cm':30,'80cm':40,'122cm':61};/* old sessions only: the face they were plotted on */
 const SPAN=20;/* new crosshair: centre to edge = 20 cm, grid every 5 cm */
 function gstats(P,rcm){if(!P.length)return null;const cx=P.reduce((a,p)=>a+p[0],0)/P.length,cy=P.reduce((a,p)=>a+p[1],0)/P.length;
@@ -170,10 +170,24 @@ function gstats(P,rcm){if(!P.length)return null;const cx=P.reduce((a,p)=>a+p[0],
  return{n:P.length,cx:cx*rcm,cy:cy*rcm,mr:mr*rcm,es:es*rcm}}
 const cm=v=>(Math.round(v*10)/10).toFixed(1);
 const dir=(x,y)=>`${cm(Math.abs(x))} cm ${x>=0?'right':'left'}, ${cm(Math.abs(y))} cm ${y>=0?'low':'high'}`;
-const tKind=T=>T.face?'legacy':({'Paper tune':'paper','Bare shaft vs fletched':'bare','Torque tune':'torque','Dudley / yoke tune':'dudley','Group tune':'group','Group test':'group','Walk-back':'walk'})[T.change]||'group';
+function tKind(T){if(T.face)return'legacy';const c=T.change;if(c=='Walk back tune')return(T.bt&&T.bt!='c')?'walk':'dudley';return({'Paper tune':'paper','Bare shaft vs fletched':'bare','Torque tune':'torque','Dudley / yoke tune':'dudley','Group tune':'group','Group test':'group','Walk-back':'walk'})[c]||'group'}
+function tName(T){const c=typeof T=='string'?T:(T&&T.change)||'';return(c=='Dudley / yoke tune'||c=='Walk-back'||c=='Walk back tune')?'Walk back tune':c}
 const tScale=T=>T.face?(FACES[T.face]||20):(T.span||SPAN);
-function torqueOn(T){return tKind(T)=='torque'&&T.torque}
 function torqueInit(){return{before:{L:[],R:[]},after:{L:[],R:[]}}}
+function torqueEnsure(T){if(tKind(T)!='torque')return false;if(T.torque)return false;T.torque=torqueInit();if((T.before||[]).length)T.torque.before.L=T.before.slice();if((T.after||[]).length)T.torque.after.L=T.after.slice();if(!T.side)T.side='L';return true}
+function torqueOn(T){return tKind(T)=='torque'}
+function tuneEmpty(t){const pn=t.paper?(t.paper.before||[]).length+(t.paper.after||[]).length:0;const tn=t.torque?['before','after'].flatMap(g=>['L','R'].map(s=>((t.torque[g]||{})[s]||[]).length)).reduce((a,b)=>a+b,0):0;return!(t.before||[]).length&&!(t.after||[]).length&&!pn&&!tn&&!(t.changes||[]).length&&!t.note&&!((t.name||'').trim())}
+function tuneStart(change,opt){opt=opt||{};if(typeof seedBows=='function')seedBows();const bows=typeof myBows=='function'?myBows():[],cb=typeof curBow=='function'&&curBow();const sets=window.myArrows?myArrows():[],acs=window.arrowSetup&&arrowSetup();const bid=opt.bow!=null?opt.bow:(cb&&cb.id)||'';const b=bows.find(x=>x.id==bid);const snap0=(b||cb)&&window.bowSnap&&bowSnap((b||cb).id);const nbt=opt.bt||(snap0&&snap0.type!='compound'?'r':'c');
+ const t={id:'t'+Date.now(),archer:S.profile,date:new Date().toLocaleDateString('en-CA'),name:opt.name||'',change,dist:opt.dist||'',span:SPAN,bt:nbt,bow:b?b.id:null,bowName:b?b.name:'',before:[],after:[],grp:'before',changes:[]};
+ if(change=='Paper tune')t.paper={before:[],after:[]};
+ if(change=='Torque tune'){t.torque=torqueInit();t.side='L'}
+ if(snap0)t.bowSpec=snap0;
+ const asel=(S.arrowSel||{})[S.profile];
+ const sdef=acs?'ac':(sets.find(a=>a.id==asel&&(a.shaft||a.spine||a.len))||sets.find(a=>a.shaft||a.spine||a.len)||{}).id||'';
+ const av=opt.arrow!=null?opt.arrow:sdef;
+ if(av=='ac'&&acs)t.arrow=acs;else if(av&&window.arrowSnapOf&&window.myArrow){const o=myArrow(av);if(o)t.arrow=arrowSnapOf(o)}
+ if(['Bare shaft vs fletched','Paper tune'].includes(change))t.hand=opt.hand||'R';
+ S.tune=S.tune||[];S.tune.push(t);S._tuneId=t.id;save();return t}
 function torquePts(T,g,side){return(((T.torque||{})[g]||{})[side])||[]}
 function torqueGap(T,g,rcm){const L=gstats(torquePts(T,g,'L'),rcm),R=gstats(torquePts(T,g,'R'),rcm);if(!L||!R)return null;return{L,R,gap:Math.abs(L.cx-R.cx),on:Math.abs(L.cx)<2&&Math.abs(R.cx)<2}}
 function torqueMark(kind,x,y,fill){const sw='0.01';
@@ -205,7 +219,7 @@ function eastonLink(p){const S2=window.ARROW_SRC||{},t=S2.eastonTM;return t?`<a 
 function readNote(k){const W={
  paper:`Stand about 5 ft from the paper. Errors show from 0 to 12 ft before the vanes correct them, and a bullet hole means straight flight, not accuracy.`,
  torque:`Shoot one end torqued left and one end torqued right, against the vertical line. Log what you changed, then shoot the same two ends again. If both groups sit on the line, the setup is forgiving. Confusing results usually mean you torqued too hard.`,
- dudley:`(credit John Dudley) Close miss = move the sight. Far miss = move the rest and leave the sight alone. Near and far both on the line = done. If the rest would end up well off centre, use yoke twists instead.`,
+ dudley:`Close miss = move the sight. Far miss = move the rest and leave the sight alone. Near and far both on the line = done. If the rest would end up well off centre, use yoke twists instead.`,
  group:`Keep whichever change gives the tightest group. Works best if you can group at about 60 m, and you can bias it slightly so the setup forgives some human variation.`,
  walk:`Arrows at every distance on one vertical line = done. Arrows spread left and right at the same distance = spring tension. Use plunger in/out and spring to get all distances on a vertical line.</p><p class="small" id="walkeaston" style="margin:6px 0 0"><b>Which way to move the plunger:</b> Easton's guide has no walk-back test, so ScoreTool does not say which way to move the plunger from a walk-back line. Easton's only in/out rule is for broadheads (right-handed archer): a group to the left acts stiff, move the rest or plunger <b>in toward the bow</b>; to the right acts weak, move it <b>out away from the bow</b>, 1/32" at a time (p. 12). For recurve tuning past the setup stage Easton says to change plunger spring tension only, not the in/out position (pp. 8 and 14).<span class="labsrc" style="display:block">${eastonLink('pp. 8, 12, 14')}</span>`};return W[k]?`<p class="small tread" style="margin:6px 0 0">${W[k]}</p>`:''}
 /* Paper tune keypad: laid out like the scoring pad, 3 x 3. Tear = where the nock end tore, from the point hole. */
@@ -261,8 +275,11 @@ function whatWire(T,k){const bt=T.bt||'c',all=tWhat(k),L=all.filter(x=>x[2]=='b'
  const wa=$('#wadd');if(wa)wa.onclick=()=>{const x=use[+$('#wi').value];T.changes=T.changes||[];T.changes.push({item:x[0],dir:$('#wd').value,amt:$('#wa').value.trim(),note:$('#wn').value.trim(),bt,date:new Date().toLocaleDateString('en-CA')});save();render()};
  app.querySelectorAll('[data-wdel]').forEach(b=>b.onclick=()=>{if(confirm('Remove this change?')){T.changes.splice(+b.dataset.wdel,1);save();render()}})}
 function bowLine(id){const s=id&&window.bowSnap?bowSnap(id):null;if(!s)return'';return[s.name,s.type=='compound'&&s.speed?({ATA:'ATA','IBO/ATA':'IBO/ATA',actual:'Measured','':'Speed'}[s.kind]??'IBO')+' '+s.speed+' fps':'',s.ata?s.ata+'" axle to axle':'',s.bh?s.bh+'" brace':''].filter(Boolean).join(' · ')}
-E.lab_opt=function(){S.tune=S.tune||[];const mine=S.tune.filter(t=>t.archer==S.profile),T=mine.find(t=>t.id==S._tuneId);
- if(!T){window._tarwOpen=false;if(typeof seedBows=='function')seedBows();const bows=typeof myBows=='function'?myBows():[],cb=typeof curBow=='function'&&curBow();
+E.lab_opt=function(){S.tune=S.tune||[];
+ const pref=window._tunePref;window._tunePref=null;const pbt=window._tuneBt;window._tuneBt=null;
+ if(pref){const mine0=S.tune.filter(t=>t.archer==S.profile),cur=mine0.find(t=>t.id==S._tuneId);window._tuneOffer=(cur&&tKind(cur)==tKind({change:pref,bt:pbt||cur.bt||'c'}))?cur.id:null;S._tuneId=null;tuneStart(pref,{bt:pbt})}
+ const mine=S.tune.filter(t=>t.archer==S.profile),T=mine.find(t=>t.id==S._tuneId);
+ if(!T){window._tuneOffer=null;window._tarwOpen=false;if(typeof seedBows=='function')seedBows();const bows=typeof myBows=='function'?myBows():[],cb=typeof curBow=='function'&&curBow();
   const sets=window.myArrows?myArrows():[],acs=window.arrowSetup&&arrowSetup(),asel=(S.arrowSel||{})[S.profile];
   const bopt=b=>{const s=window.bowSnap&&bowSnap(b.id),nm=String(b.name||'Bow').trim(),low=nm.toLowerCase();return`<option value="${b.id}"${cb&&b.id==cb.id?' selected':''}>${h(nm)}${s&&s.model&&!low.includes(String(s.model).toLowerCase())?' ('+h(s.name)+')':''}</option>`};
   const sdef=acs?'ac':(sets.find(a=>a.id==asel&&(a.shaft||a.spine||a.len))||sets.find(a=>a.shaft||a.spine||a.len)||{}).id||'';
@@ -276,25 +293,20 @@ E.lab_opt=function(){S.tune=S.tune||[];const mine=S.tune.filter(t=>t.archer==S.p
   <div><label for="t_myarr">Arrows</label><select id="t_myarr"><option value="">None</option>${acs?`<option value="ac"${sdef=='ac'?' selected':''}>Arrow chooser: ${h(arwSum(acs))}</option>`:''}${sets.map(a=>`<option value="${h(a.id)}"${a.id==sdef?' selected':''}>${h(a.name||'Arrows')}</option>`).join('')}</select></div>
   <div id="thandw"><label for="thand">Bow hand</label><select id="thand"><option value="R">Right-handed archer</option><option value="L">Left-handed archer</option></select></div></div>
   <button class="btn alt full" id="tgo" style="margin-top:8px">Start</button></div>
-  ${mine.length?`<div class="card" id="tpast"><span class="kicker">Past sessions</span>${mine.slice().reverse().map(t=>{const k=tKind(t),rc=tScale(t),tq=torqueOn(t),B=k=='paper'||tq?null:gstats(t.before,rc),A=k=='paper'||tq?null:gstats(t.after,rc),pn=t.paper?(t.paper.before||[]).length+(t.paper.after||[]).length:0,tn=tq?['before','after'].map(g=>['L','R'].map(s=>torquePts(t,g,s).length).reduce((a,b)=>a+b,0)):null;
-   return`<div class="tpastrow">${row('x" data-tune="'+t.id,'🎯',t.name||t.change,`${t.date} · ${t.change}${t.dist?' · '+t.dist:''} · ${k=='paper'?pn+' arrow'+(pn==1?'':'s'):tq?(tn[0]+' before / '+tn[1]+' after'):(B?B.n:0)+' before'+(A?' / '+A.n+' after':'')}`)}<button class="btn ghost tpastdel" data-tdel="${t.id}" aria-label="Delete ${h(t.name||t.change)} from ${h(t.date)}">Delete</button></div>`}).join('')}</div>`:''}
+  ${mine.length?`<div class="card" id="tpast"><span class="kicker">Past sessions</span>${mine.slice().reverse().map(t=>{const k=tKind(t),rc=tScale(t),tq=torqueOn(t);if(tq)torqueEnsure(t);const B=k=='paper'||tq?null:gstats(t.before,rc),A=k=='paper'||tq?null:gstats(t.after,rc),pn=t.paper?(t.paper.before||[]).length+(t.paper.after||[]).length:0,tn=tq?['before','after'].map(g=>['L','R'].map(s=>torquePts(t,g,s).length).reduce((a,b)=>a+b,0)):null;
+   return`<div class="tpastrow">${row('x" data-tune="'+t.id,'🎯',t.name||tName(t),`${t.date} · ${tName(t)}${t.dist?' · '+t.dist:''} · ${k=='paper'?pn+' arrow'+(pn==1?'':'s'):tq?(tn[0]+' before / '+tn[1]+' after'):(B?B.n:0)+' before'+(A?' / '+A.n+' after':'')}`)}<button class="btn ghost tpastdel" data-tdel="${t.id}" aria-label="Delete ${h(t.name||tName(t))} from ${h(t.date)}">Delete</button></div>`}).join('')}</div>`:''}
   <p class="small muted">Records where your arrows land and what you changed.</p>`;
   bar('Arrow optimizer','tools','Tools');
   let nbt=snap0&&snap0.type!='compound'?'r':'c';
   app.querySelectorAll('[data-nbt]').forEach(b=>b.onclick=()=>{nbt=b.dataset.nbt;app.querySelectorAll('[data-nbt]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.nbt==nbt))});
   const tcs=()=>{$('#thandw').hidden=!['Bare shaft vs fletched','Paper tune'].includes($('#tc').value)};$('#tc').onchange=tcs;tcs();
   const pb=$('#t_mybow');if(pb)pb.onchange=()=>{$('#t_bowline').textContent=bowLine(pb.value);const s=pb.value&&window.bowSnap&&bowSnap(pb.value);if(s){nbt=s.type=='compound'?'c':'r';app.querySelectorAll('[data-nbt]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.nbt==nbt))}};
-  $('#tgo').onclick=()=>{const bid=pb?pb.value:'',b=bows.find(x=>x.id==bid),c=$('#tc').value;
-   const t={id:'t'+Date.now(),archer:S.profile,date:new Date().toLocaleDateString('en-CA'),name:$('#tn').value.trim(),change:c,dist:$('#td').value.trim(),span:SPAN,bt:nbt,bow:b?b.id:null,bowName:b?b.name:'',before:[],after:[],grp:'before',changes:[]};
-   if(c=='Paper tune')t.paper={before:[],after:[]};
-   if(c=='Torque tune'){t.torque=torqueInit();t.side='L'}
-   const snap=b&&window.bowSnap&&bowSnap(b.id);if(snap)t.bowSpec=snap;
-   const av=$('#t_myarr').value;if(av=='ac'&&acs)t.arrow=acs;else if(av&&window.arrowSnapOf&&window.myArrow){const o=myArrow(av);if(o)t.arrow=arrowSnapOf(o)}
-   if(['Bare shaft vs fletched','Paper tune'].includes(c))t.hand=$('#thand').value;
-   S.tune.push(t);S._tuneId=t.id;save();render();scrollTo(0,0)};
+  $('#tgo').onclick=()=>{const bid=pb?pb.value:'',c=$('#tc').value,av=$('#t_myarr')?$('#t_myarr').value:'',hand=$('#thand')?$('#thand').value:undefined;
+   tuneStart(c,{bt:nbt,bow:bid,name:$('#tn').value.trim(),dist:$('#td').value.trim(),arrow:av,hand:hand});render();scrollTo(0,0)};
   app.querySelectorAll('[data-tune]').forEach(x=>x.onclick=()=>{S._tuneId=x.dataset.tune;save();render();scrollTo(0,0)});
   app.querySelectorAll('[data-tdel]').forEach(x=>x.onclick=e=>{e.stopPropagation();const t=S.tune.find(y=>y.id==x.dataset.tdel&&y.archer==S.profile);if(!t)return;
-   if(confirm(`Delete "${t.name||t.change}" from ${t.date}? This can't be undone.`)){S.tune=S.tune.filter(y=>y!==t);save();render()}});return}
+   if(confirm(`Delete "${t.name||tName(t)}" from ${t.date}? This can't be undone.`)){S.tune=S.tune.filter(y=>y!==t);save();render()}});return}
+ if(torqueEnsure(T))save();
  const k=tKind(T),rcm=tScale(T),g=T.grp||'before',paper=k=='paper',one=T.change=='Just a group',bare=k=='bare',tq=torqueOn(T),side=T.side||'L';
  const B=paper||tq?null:gstats(T.before,rcm),A=paper||tq?null:gstats(T.after,rcm);
  const LB=bare?'Fletched':'Before',LA=bare?'Bare':'After';
@@ -309,13 +321,15 @@ E.lab_opt=function(){S.tune=S.tune||[];const mine=S.tune.filter(t=>t.archer==S.p
  const stats=paper?paperHints(T,pp.top):`<table class="labtbl" id="${tq?'tqstats':'tstats'}"><thead><tr><th></th><th>Arrows</th><th>Avg spread</th><th>Widest</th><th>Centre</th></tr></thead><tbody>${tq?tqRows:line(one?'● Group':'● '+LB,B)+(one?'':line('■ '+LA,A))}</tbody></table>`;
  const help=paper?'':`<p class="small muted">Tap where each arrow landed. Grid squares are 5 cm${T.face?` (this older session uses its ${h(T.face)} face's scale)`:''}. Avg spread = twice the average distance from the group centre. Widest = the two furthest-apart arrows.</p>`;
  const clrLbl=tq?h('torqued '+(side=='L'?'left':'right')+' ('+(g=='before'?'before':'after')+')'):one?'group':h((g=='before'?LB:LA).toLowerCase());
- const head=`<div class="card"><span class="kicker">${h(T.date)} · ${h(T.change)}${T.dist?' · '+h(T.dist):''}${T.bowName?' · '+h(T.bowName):''}</span><h2>${h(T.name||T.change)}</h2>`;
+ const head=`<div class="card"><span class="kicker">${h(T.date)} · ${h(tName(T))}${T.dist?' · '+h(T.dist):''}${T.bowName?' · '+h(T.bowName):''}</span><h2>${h(T.name||tName(T))}</h2>`;
  const tools=`<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn ghost" id="tun">↶ Undo</button><button class="btn ghost" id="tclr">Clear ${clrLbl}</button><button class="btn ghost" id="tdone">Done</button><button class="btn ghost" id="tdel">Delete session</button></div>`;
  const meta=`${bare||paper?`<label for="tvhand">Bow hand</label><select id="tvhand"><option value=""${T.hand?'':' selected'}>Not set</option><option value="R"${T.hand=='R'?' selected':''}>Right-handed archer</option><option value="L"${T.hand=='L'?' selected':''}>Left-handed archer</option></select>`:''}${cmp}${readNote(k)}${help}
  <label for="tnote">Note</label><textarea id="tnote" rows="2">${h(T.note||'')}</textarea>`;
- app.innerHTML=tq
+ const offer=window._tuneOffer&&mine.find(x=>x.id==window._tuneOffer&&x.id!=T.id);
+ const offerCard=offer?`<div class="card" id="tuneoffer"><p class="small" style="margin:0 0 8px">You have an unfinished ${h(tName(offer))} from ${h(offer.date)}${offer.dist?' · '+h(offer.dist):''}. This screen is a new session.</p><button class="btn ghost" id="tuneofferbtn" type="button">Continue the earlier session</button></div>`:'';
+ app.innerHTML=offerCard+(tq
   ?`${head}${seg}${sides}${plot}${tools}</div>${whatCard(T,k)}<div class="card" id="tqafter"><span class="kicker">Left vs right</span>${stats}${meta}</div>${arwCard(T,one)}`
-  :`${head}<div class="labgrid2"><div>${seg}${plot}${tools}</div><div>${stats}${meta}</div></div></div>${whatCard(T,k)}${arwCard(T,one)}${bare?bareCard(T,B,A):''}`;
+  :`${head}<div class="labgrid2"><div>${seg}${plot}${tools}</div><div>${stats}${meta}</div></div></div>${whatCard(T,k)}${arwCard(T,one)}${bare?bareCard(T,B,A):''}`);
  bar('Tuning session','lab_opt','Arrow optimizer');
  const grp=()=>one||g=='before'?'before':'after';
  const tqPush=(x,y)=>{const box=T.torque[grp()],s=T.side||'L';(box[s]=box[s]||[]).push([+x.toFixed(3),+y.toFixed(3),new Date().toLocaleDateString('en-CA')])};
@@ -326,7 +340,8 @@ E.lab_opt=function(){S.tune=S.tune||[];const mine=S.tune.filter(t=>t.archer==S.p
  $('#tun').onclick=()=>{if(paper)(T.paper[grp()]||[]).pop();else if(tq)(T.torque[grp()][T.side||'L']||[]).pop();else T[grp()].pop();save();render()};
  $('#tclr').onclick=()=>{if(confirm('Clear these arrows?')){if(paper)T.paper[grp()]=[];else if(tq)T.torque[grp()][T.side||'L']=[];else T[grp()]=[];save();render()}};
  $('#tdone').onclick=()=>{S._tuneId=null;save();render()};
- $('#tdel').onclick=()=>{if(confirm(`Delete "${T.name||T.change}" from ${T.date}? This can't be undone.`)){S.tune=S.tune.filter(x=>x!==T);S._tuneId=null;save();render()}};
+ $('#tdel').onclick=()=>{if(confirm(`Delete "${T.name||tName(T)}" from ${T.date}? This can't be undone.`)){S.tune=S.tune.filter(x=>x!==T);S._tuneId=null;window._tuneOffer=null;save();render()}};
+ const ob=$('#tuneofferbtn');if(ob)ob.onclick=()=>{const id=window._tuneOffer,fresh=T;window._tuneOffer=null;if(fresh&&tuneEmpty(fresh))S.tune=S.tune.filter(x=>x!==fresh);S._tuneId=id;save();render();scrollTo(0,0)};
  $('#tnote').onchange=e=>{T.note=e.target.value;save()};
  const th=$('#tvhand');if(th)th.onchange=()=>{if(th.value)T.hand=th.value;else delete T.hand;save();render()};
  whatWire(T,k);
