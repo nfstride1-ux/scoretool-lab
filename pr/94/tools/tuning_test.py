@@ -12,7 +12,7 @@ import freeport
 from playwright.sync_api import sync_playwright
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHOTS = os.environ.get('SHOTS', '/workspace/st-tuning')
-os.makedirs(SHOTS, exist_ok=True); os.makedirs(os.path.join(SHOTS,'walkback'), exist_ok=True)
+os.makedirs(SHOTS, exist_ok=True); os.makedirs(os.path.join(SHOTS,'walkback'), exist_ok=True); os.makedirs(os.path.join(SHOTS,'walkback','fix'), exist_ok=True)
 ok, bad = [], []
 def chk(n, c, extra=''):
     (ok if c else bad).append(n); print(('PASS ' if c else 'FAIL ') + n + ('' if c else '  ' + str(extra)[:300]), flush=True)
@@ -334,14 +334,8 @@ try:
             if height in (60,80,100,120):
                 pg.select_option('#wb_h', str(height))
             else:
-                pg.evaluate("""(h) => {
-                  const t=(S.tune||[]).find(x=>x.id==S._tuneId);
-                  if(t&&t.walk){ t.walk.height=+h; if(typeof save==='function')save(); }
-                  if(typeof render==='function')render();
-                }""", height)
-                pg.wait_for_timeout(250)
-                if pg.locator('#wb_hcustom').is_visible():
-                    pg.fill('#wb_hcustom', str(height))
+                pg.select_option('#wb_h', 'custom'); pg.wait_for_timeout(250)
+                pg.fill('#wb_hcustom', str(height))
             pg.locator('#wb_dw').evaluate('e=>e.blur()'); pg.wait_for_timeout(200)
             # Use the agreed default speed estimate (not the saved bow's IBO / draw length)
             pg.evaluate("""() => {
@@ -358,6 +352,32 @@ try:
                 pg.wait_for_timeout(200)
             dists = pg.evaluate("(()=>{const t=S.tune.find(x=>x.id==S._tuneId);return t&&t.walk&&t.walk.distances})()")
             return dists, pg.inner_text('#wbdists')
+        # Real clicks: start as Compound (saved bow), then switch type, height, weight. Do not set W.kind in evaluate.
+        start(pg, 'Walk back tune', 'WB click lock', bt='c')
+        chk('setup defaults to Compound when started as compound', pg.locator('[data-wbk=compound][aria-pressed=true]').count()==1 and pg.locator('#wbsetup').count()==1)
+        pg.click('[data-wbk=recurve]'); pg.wait_for_timeout(300)
+        rec=pg.evaluate("(()=>{const t=S.tune.find(x=>x.id==S._tuneId).walk;return {kind:t.kind,d:t.distances,pressed:[...document.querySelectorAll('#wbkind [aria-pressed=true]')].map(b=>b.dataset.wbk)}})()")
+        chk('real click Recurve sticks (not locked on Compound)', rec.get('kind')=='recurve' and rec.get('pressed')==['recurve'] and pg.locator('#wbbubble').count()==0, rec)
+        pg.click('[data-wbk=barebow]'); pg.wait_for_timeout(300)
+        bare=pg.evaluate("(()=>{const t=S.tune.find(x=>x.id==S._tuneId).walk;return {kind:t.kind,pressed:[...document.querySelectorAll('#wbkind [aria-pressed=true]')].map(b=>b.dataset.wbk)}})()")
+        chk('real click Barebow sticks', bare.get('kind')=='barebow' and bare.get('pressed')==['barebow'], bare)
+        pg.click('[data-wbk=compound]'); pg.wait_for_timeout(300)
+        comp=pg.evaluate("(()=>{const t=S.tune.find(x=>x.id==S._tuneId).walk;return {kind:t.kind,pressed:[...document.querySelectorAll('#wbkind [aria-pressed=true]')].map(b=>b.dataset.wbk),bubble:!!document.getElementById('wbbubble')}})()")
+        chk('real click Compound sticks and pre-checks return', comp.get('kind')=='compound' and comp.get('pressed')==['compound'] and comp.get('bubble'), comp)
+        pg.click('[data-wbk=recurve]'); pg.wait_for_timeout(250)
+        pg.fill('#wb_dw', '30'); pg.locator('#wb_dw').evaluate('e=>e.blur()'); pg.wait_for_timeout(250)
+        d30=pg.evaluate("S.tune.find(x=>x.id==S._tuneId).walk.distances")
+        chk('distances recompute after click Recurve and 30 lb', d30==[10,20,25], d30)
+        pg.select_option('#wb_h', '80'); pg.wait_for_timeout(250)
+        h80=pg.evaluate("(()=>{const t=S.tune.find(x=>x.id==S._tuneId).walk;return {h:t.height,sel:t.hSel,d:t.distances,txt:document.getElementById('wbdists')&&document.getElementById('wbdists').innerText}})()")
+        chk('real change of target height to 80 cm recomputes', h80.get('h')==80 and h80.get('sel')=='80', h80)
+        pg.select_option('#wb_h', 'custom'); pg.wait_for_timeout(250)
+        chk('Custom height field is visible after choosing Custom', pg.locator('#wb_hcustom').is_visible())
+        pg.fill('#wb_hcustom', '50'); pg.locator('#wb_hcustom').evaluate('e=>e.blur()'); pg.wait_for_timeout(250)
+        h50=pg.evaluate("(()=>{const t=S.tune.find(x=>x.id==S._tuneId).walk;return {h:t.height,sel:t.hSel,customOn:document.getElementById('wb_h').value=='custom'}})()")
+        chk('custom 50 cm stays on Custom and saves the height', h50=={'h':50,'sel':'custom','customOn':True} or (h50.get('h')==50 and h50.get('sel')=='custom' and h50.get('customOn')), h50)
+        shot(pg, 'walkback/fix/01-click-recurve.png')
+
         start(pg, 'Walk back tune', 'WB compound 60', bt='c')
         d, txt = fill_walk(pg, 'compound', 60, 120, bubble=True, axis2=True)
         chk('new walk-back compound 60/120 distances', d==[10,25,35], (d,txt))

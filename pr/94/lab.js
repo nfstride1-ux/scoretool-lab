@@ -288,13 +288,13 @@ function walkPrefill(T,snap){const s=snap||T.bowSpec||{};const kind=walkKindOf(s
 function walkPlanOpts(W){return{kind:W.kind||'compound',dw:W.dw,height:W.height,dl:W.dl,ibo:W.ibo,arrowGr:W.arrowGr,fps:W.fpsSrc=='measured'?W.fps:undefined}}
 function walkRefresh(W){const p=WalkBack.plan(walkPlanOpts(W));W.kind=p.kind;W.dw=p.dw;W.height=p.height;if(W.fpsSrc!='measured'){W.fps=p.fps;W.fpsSrc=p.src}W.distances=p.distances;W.usableCm=p.usableCm;W.nodragMax=p.nodragMax;if(!W.distances.includes(+W.dist))W.dist=W.distances[0];return p}
 function walkDistLine(p){if(!p||!p.distances)return'';const d=p.distances.map(x=>x+' m').join(', ');if(p.distances.length<3)return d+' — only these stay on a target this tall at this speed (estimates).';return d+' (estimates).'}
-function walkSetupCard(T){const W=T.walk,p=walkRefresh(W),kind=W.kind||'compound',H=+W.height||120,preset=[60,80,100,120].includes(H),comp=kind=='compound';
+function walkSetupCard(T){const W=T.walk,p=walkRefresh(W),kind=W.kind||'compound',H=+W.height||120,sel=W.hSel==='custom'||![60,80,100,120].includes(H)?'custom':String(H),preset=sel!='custom',comp=kind=='compound';
  const yn=(id,on)=>`<div class="labseg" role="group" aria-label="${id}" id="${id}"><button type="button" data-wbyn="${id}" data-v="1" aria-pressed="${on?'true':'false'}">Yes</button><button type="button" data-wbyn="${id}" data-v="0" aria-pressed="${on?'false':'true'}">No / not sure</button></div>`;
  return`<div class="card" id="wbsetup"><span class="kicker">Walk back tune</span><h2>Set safe distances</h2>
  <p class="small" style="margin:0 0 8px">Enter the bow and roughly how tall the target is. The app then gives up to three distances that should stay on the boss, using an estimate of arrow drop (air drag included). These are estimates, not a guarantee — shoot one test arrow first at each new distance, and stop if an arrow lands in the bottom quarter.</p>
  <label>Bow type</label><div class="labseg" role="group" aria-label="Bow type" id="wbkind"><button type="button" data-wbk="compound" aria-pressed="${kind=='compound'}">Compound</button><button type="button" data-wbk="recurve" aria-pressed="${kind=='recurve'}">Recurve</button><button type="button" data-wbk="barebow" aria-pressed="${kind=='barebow'}">Barebow</button></div>
  <div class="labgrid2"><div><label for="wb_dw">Draw weight (lb)</label><input id="wb_dw" type="number" inputmode="decimal" min="10" max="90" step="1" value="${h(W.dw||'')}">
- </div><div><label for="wb_h">Target height</label><select id="wb_h"><option value="60"${H==60?' selected':''}>About 60 cm</option><option value="80"${H==80?' selected':''}>About 80 cm</option><option value="100"${H==100?' selected':''}>About 100 cm</option><option value="120"${H==120?' selected':''}>About 120 cm</option><option value="custom"${preset?'':' selected'}>Custom</option></select></div></div>
+ </div><div><label for="wb_h">Target height</label><select id="wb_h"><option value="60"${sel=='60'?' selected':''}>About 60 cm</option><option value="80"${sel=='80'?' selected':''}>About 80 cm</option><option value="100"${sel=='100'?' selected':''}>About 100 cm</option><option value="120"${sel=='120'?' selected':''}>About 120 cm</option><option value="custom"${sel=='custom'?' selected':''}>Custom</option></select></div></div>
  <div id="wb_hwrap"${preset?' hidden':''}><label for="wb_hcustom">Height (cm)</label><input id="wb_hcustom" type="number" inputmode="decimal" min="40" max="200" step="1" value="${h(H)}"></div>
  <div><label for="wb_fps">Arrow speed (optional, fps)</label><input id="wb_fps" type="number" inputmode="decimal" min="80" max="400" step="1" placeholder="Leave blank to estimate" value="${W.fpsSrc=='measured'&&W.fps?h(W.fps):''}"><p class="small muted" id="wbfpsnote" style="margin:4px 0 0">${W.fpsSrc=='measured'?'Using the speed you entered.':'Estimated speed: '+h(p.fps)+' fps.'}</p></div>
  ${comp?`<p class="small" style="margin:10px 0 4px">Before you start:</p>
@@ -327,18 +327,25 @@ function walkRender(T,mine){
  if(W.stage!='shoot'){
   app.innerHTML=offerCard+walkSetupCard(T)+`<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn ghost" id="tdone">Done</button><button class="btn ghost" id="tdel">Delete session</button></div>`;
   bar('Tuning session','lab_opt','Arrow optimizer');
-  const apply=()=>{const kind=app.querySelector('[data-wbk][aria-pressed=true]');if(kind)W.kind=kind.dataset.wbk;
-   W.dw=parseFloat($('#wb_dw').value)||W.dw;const hs=$('#wb_h').value;W.height=hs=='custom'?(parseFloat($('#wb_hcustom').value)||W.height):+hs;
+  const apply=()=>{
+   /* Do not re-read bow type from aria-pressed: that still shows the previous type until render, and would lock the control on Compound. */
+   W.dw=parseFloat($('#wb_dw').value)||W.dw;const hs=$('#wb_h').value;W.hSel=hs;W.height=hs=='custom'?(parseFloat($('#wb_hcustom').value)||W.height):+hs;
    const raw=$('#wb_fps').value.trim();if(raw&&isFinite(+raw)){W.fps=+raw;W.fpsSrc='measured'}else{W.fpsSrc='estimate';W.fps=undefined}
    if(W.kind=='compound'){const y=(id)=>app.querySelector('#'+id+' [data-v="1"]')&&app.querySelector('#'+id+' [data-v="1"]').getAttribute('aria-pressed')=='true';W.bubble=y('wbbubble');W.axis2=y('wbaxis2')}
-   T.bt=W.kind=='compound'?'c':'r';walkRefresh(W);save()};
-  const saveW=()=>{apply();render()};
-  app.querySelectorAll('[data-wbk]').forEach(b=>b.onclick=()=>{W.kind=b.dataset.wbk;T.bt=W.kind=='compound'?'c':'r';saveW()});
-  app.querySelectorAll('[data-wbyn]').forEach(b=>b.onclick=()=>{const id=b.dataset.wbyn,on=b.dataset.v=='1';if(id=='wbbubble')W.bubble=on;if(id=='wbaxis2')W.axis2=on;save();render()});
+   T.bt=W.kind=='compound'?'c':'r';return walkRefresh(W)};
+  const paintPlan=(p)=>{const box=$('#wbdists'),note=$('#wbfpsnote');if(box)box.innerHTML=`<p style="margin:0"><b>Suggested distances:</b> ${h(walkDistLine(p))}</p>
+ <p class="small" style="margin:6px 0 0">Sight stays on 10 m. Aim at a dot at the top of the target, with a vertical line down from it. Usable drop used for this estimate: ${h(p.usableCm)} cm (target height minus the bottom quarter and a small top margin).${W.kind=='compound'?' To go further, you can use a long-distance sight mark instead, so the arrows drop less.':''}</p>`;
+   if(note)note.textContent=W.fpsSrc=='measured'?'Using the speed you entered.':'Estimated speed: '+p.fps+' fps.';};
+  const saveW=()=>{paintPlan(apply());save();render()};
+  /* Field edits must not full-render: a render destroys Start shooting before the tap lands, so custom height / weight / speed looked broken. */
+  const commit=()=>{paintPlan(apply());save();ready()};
+  app.querySelectorAll('[data-wbk]').forEach(b=>b.onclick=()=>{W.kind=b.dataset.wbk;T.bt=W.kind=='compound'?'c':'r';app.querySelectorAll('[data-wbk]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.wbk==W.kind?'true':'false'));saveW()});
+  app.querySelectorAll('[data-wbyn]').forEach(b=>b.onclick=()=>{const id=b.dataset.wbyn,on=b.dataset.v=='1';if(id=='wbbubble')W.bubble=on;if(id=='wbaxis2')W.axis2=on;app.querySelectorAll('#'+id+' [data-wbyn]').forEach(x=>x.setAttribute('aria-pressed',(x.dataset.v=='1')==on?'true':'false'));save();render()});
   const ready=()=>$('#wbgo').disabled=!($('#wb_dw').value&&($('#wb_h').value!='custom'||$('#wb_hcustom').value));
-  $('#wb_dw').oninput=ready;$('#wb_hcustom').oninput=ready;
-  $('#wb_h').onchange=()=>{$('#wb_hwrap').hidden=$('#wb_h').value!='custom';saveW()};
-  $('#wb_hcustom').onchange=$('#wb_fps').onchange=$('#wb_dw').onchange=saveW;
+  const live=()=>{if($('#wb_dw').value)W.dw=parseFloat($('#wb_dw').value)||W.dw;if($('#wb_h')){const hs=$('#wb_h').value;W.hSel=hs;if(hs=='custom'){const c=parseFloat($('#wb_hcustom').value);if(c)W.height=c}else W.height=+hs}const raw=$('#wb_fps').value.trim();if(raw&&isFinite(+raw)){W.fps=+raw;W.fpsSrc='measured'}else{W.fpsSrc='estimate';W.fps=undefined}paintPlan(walkRefresh(W));ready()};
+  $('#wb_dw').oninput=$('#wb_hcustom').oninput=$('#wb_fps').oninput=live;
+  $('#wb_h').onchange=()=>{$('#wb_hwrap').hidden=$('#wb_h').value!='custom';W.hSel=$('#wb_h').value;commit()};
+  $('#wb_hcustom').onchange=$('#wb_fps').onchange=$('#wb_dw').onchange=commit;
   $('#wbgo').onclick=()=>{apply();if(!W.dw||!W.height)return;W.stage='shoot';W.dist=(W.distances||[10])[0];T.dist=(W.distances||[]).map(d=>d+' m').join(', ');T.bt=W.kind=='compound'?'c':'r';save();render();scrollTo(0,0)};
   $('#tdone').onclick=()=>{S._tuneId=null;save();render()};
   $('#tdel').onclick=()=>{if(confirm(`Delete "${T.name||tName(T)}" from ${T.date}? This can't be undone.`)){S.tune=S.tune.filter(x=>x!==T);S._tuneId=null;window._tuneOffer=null;save();render()}};

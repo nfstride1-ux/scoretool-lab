@@ -4,6 +4,13 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 22:20 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: On branch `cursor/walkback-tune` / PR #94 (cache `v2026-11-27-2220-walkback`). Fixed the Walk back start screen so bow type is not locked on Compound. Root cause: clicking Recurve or Barebow set the type, then apply() re-read the still-pressed Compound button and overwrote the choice. Apply no longer re-reads bow type from the buttons. Typing a custom height, draw weight or speed and tapping Start no longer rebuilds the card under the tap (that was swallowing the Start click). Custom height stays on Custom even if the number matches a preset. Distances still update live as the first-screen options change.
+- Tests: tools/walkback_test.js 77/77, tools/tuning_test.py 132/132 (includes a real click from Compound to Recurve and Barebow, live distances, custom 50 cm, stop-label 50/60/80/120), tools/tier_gate_test.py 195/195, safety-smoke 15/15, privacy-scan pass.
+- Half-done: Republish lab preview pr/94 and play the whole flow through at phone and desktop width, main and /test/. Preview only — do not merge until Nathe says “go live 94”. Bhutan is not in this PR.
+
 ## 27 Nov 2026, 19:51 AWST — [Jarvis]
 
 - Who: Jarvis.

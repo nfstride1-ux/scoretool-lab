@@ -4,6 +4,13 @@ Newest first. Each entry names the version tag shown in Settings.
 
 
 
+## v2026-11-27-2220-walkback: Walk back start screen is not locked on Compound
+
+- Compound, Recurve and Barebow on the Walk back start screen can be changed freely, including after a saved compound bow has pre-filled the form. Draw weight, target height (including Custom) and optional speed all update the suggested distances live, and Start shooting works even if you go straight from typing a custom height. Preview only — not live until Nathe says go live 94. Cache `v2026-11-27-2220-walkback`.
+
+### Files
+lab.js, test/lab.js, tools/tuning_test.py, index.html, test/index.html, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
+
 ## v2026-11-27-1951-walkback: Walk back stop-zone label fits on small target faces
 
 - The in-plot “Bottom quarter — stop if an arrow lands here” line no longer clips on smaller bosses at phone width. A 60 cm face (and smaller, including a custom 50 cm) shows “Stop zone”; an 80 cm face shows “Stop if an arrow lands here”; a 120 cm face keeps the full sentence. Preview only — not live until Nathe says go live 94. Cache `v2026-11-27-1951-walkback`.
