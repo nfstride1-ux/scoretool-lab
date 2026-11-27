@@ -94,6 +94,8 @@ try:
         pg.click('[data-bt=r]'); pg.wait_for_timeout(300)
         wi = pg.evaluate("[...document.querySelectorAll('#wi option')].map(o=>o.textContent)")
         chk('paper recurve list', 'Plunger in/out (centre shot)' in wi and 'Tiller' in wi and 'Rest up/down' not in wi, wi)
+        ht = pg.inner_text('#tearhint')
+        chk('paper recurve nock-high: nocking point only, no rest move', 'Most common tear: Nock high' in ht and 'lower the nocking point' in ht and 'raise the rest' not in ht and 'recurve' in ht.lower(), ht)
         pg.select_option('#wi', label='Plunger spring tension'); pg.wait_for_timeout(100)
         chk('direction follows item', pg.evaluate("[...document.querySelectorAll('#wd option')].map(o=>o.textContent)") == ['More tension', 'Less tension'])
         pg.select_option('#wd', 'Less tension'); pg.fill('#wa', '1/8 turn'); pg.fill('#wn', 'after nock-left tears'); pg.click('#wadd'); pg.wait_for_timeout(300)
@@ -160,6 +162,7 @@ try:
         chk('bare: crosshair both lines', pg.get_attribute('#tface', 'data-lines') == 'vh')
         nc = pg.inner_text('#nextcard') if pg.locator('#nextcard').count() else ''
         chk('bare compound: next step has no cushion plunger', 'plunger' not in v.lower() and 'cushion' not in nc.lower() and 'plunger' not in nc.lower() and ('Rest left/right' in nc or 'yoke' in nc.lower()), (v, nc[:400]))
+        chk('bare compound: rest direction is Easton in/out, not toward/away from the reading', 'out, away from the bow' in nc and 'weak/stiff reading' not in nc, nc[:400])
         shot(pg, '08-bare-verdict.png'); shot(pg, '16-bare-compound-next.png')
         # recurve still gets the plunger row
         start(pg, 'Bare shaft vs fletched', bt='r')
@@ -172,7 +175,12 @@ try:
         start(pg, 'Creep tune')
         chk('creep: own session, Full draw / Crept', pg.evaluate("(S.tune.find(t=>t.id==S._tuneId)||{}).change")=='Creep tune' and 'Full draw' in pg.inner_text('#app') and 'Crept' in pg.inner_text('#app') and pg.locator('#tface').count()==1)
         wi = pg.evaluate("[...document.querySelectorAll('#wi option')].map(o=>o.textContent)")
-        chk('creep: What I changed is timing only', any('Cam timing' in x for x in wi) and any('timing' in x.lower() for x in wi) and not any('Plunger' in x or 'Point weight' in x or 'Brace' in x or 'Rest height' in x for x in wi) and 'George' not in ''.join(wi), wi)
+        chk('creep: What I changed is cam timing only', wi[0].startswith('Cam timing') and not any('Drop-away' in x or 'Plunger' in x or 'Point weight' in x or 'Brace' in x or 'Rest height' in x for x in wi) and 'George' not in ''.join(wi), wi)
+        for fx, fy in [(0.50, 0.48), (0.52, 0.50), (0.49, 0.51)]: tap(pg, fx, fy)
+        pg.click('[data-g=after]'); pg.wait_for_timeout(200)
+        for fx, fy in [(0.50, 0.70), (0.52, 0.72), (0.49, 0.71)]: tap(pg, fx, fy)
+        cv = pg.inner_text('#creepverdict') if pg.locator('#creepverdict').count() else ''
+        chk('creep: verdict is drop / cam timing, not group tightness', 'low' in cv.lower() and 'cam timing' in cv.lower() and 'tighter' not in cv.lower() and 'wider' not in cv.lower(), cv)
         shot(pg, '18-creep.png')
         # old face session opens and is unchanged
         pg.evaluate("S._tuneId='t1700000000000';save();nav('lab_opt')"); pg.wait_for_timeout(400)
@@ -269,8 +277,26 @@ try:
         pg.click('[data-thbt=c]'); pg.wait_for_timeout(200)
         pg.click('[data-tn=setup]'); pg.wait_for_timeout(400)
         chk('helper: Bow setup opens My bows, not Sight marks', pg.evaluate('view')=='lab_mybows' and 'my bows' in pg.inner_text('.labbar h1').lower() and pg.locator('#gearcard').count()==0, pg.evaluate('view'))
+        chk('helper: compound Bow setup shows Coach checklist', pg.locator('#mbsetup').count()==1 and 'rest centred' in pg.inner_text('#mbsetup').lower() and 'cam timing' in pg.inner_text('#mbsetup').lower(), pg.inner_text('#mbsetup') if pg.locator('#mbsetup').count() else '')
         back = pg.inner_text('.labback') if pg.locator('.labback').count() else ''
         chk('my bows back goes to Tools', 'Tools' in back, back)
+        pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
+        pg.click('[data-thbt=c]'); pg.wait_for_timeout(150)
+        pg.click('[data-tn=spine]'); pg.wait_for_timeout(500)
+        chk('helper: Draw weight / spine opens Arrow chooser, not Calculators', pg.evaluate('view')=='lab_chooser' and pg.locator('.acres').count()>=1, pg.evaluate('view'))
+        pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
+        pg.click('[data-thbt=c]'); pg.wait_for_timeout(150)
+        pg.click('[data-tn=cut]'); pg.wait_for_timeout(500)
+        chk('helper: Cut length opens the chooser cut helper', pg.evaluate('view')=='lab_chooser' and (pg.locator('#accut').count()==1 or 'Shortest safe cut' in pg.inner_text('#app')), pg.evaluate('view'))
+        pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
+        pg.click('[data-thbt=r]'); pg.wait_for_timeout(200)
+        pg.click('[data-tn=setup]'); pg.wait_for_timeout(400)
+        chk('helper: recurve Bow setup shows Coach checklist', pg.locator('#mbsetup').count()==1 and 'brace height' in pg.inner_text('#mbsetup').lower() and 'tiller' in pg.inner_text('#mbsetup').lower(), pg.inner_text('#mbsetup') if pg.locator('#mbsetup').count() else '')
+        if pg.locator('#mbadd').count():
+            pg.click('#mbadd'); pg.wait_for_timeout(200)
+        if pg.locator('[data-ty=recurve]').count():
+            pg.click('[data-ty=recurve]'); pg.wait_for_timeout(250)
+        chk('recurve bow form has brace height and tiller', pg.locator('[data-f=bh]').count()==1 and pg.locator('[data-f=tiller]').count()==1)
         # Tools: Add bow, then Add arrows, then Tune; Sight marks lives in My archery
         pg.evaluate("nav('tools')"); pg.wait_for_timeout(300)
         tools = pg.evaluate("[...document.querySelectorAll('.labmenu .labrow')].map(b=>({go:b.dataset.go,t:b.querySelector('b').textContent}))")

@@ -212,7 +212,7 @@ const WHAT={
  torque:[['Sight one click left/right','lr','b'],['Yoke / cam lean','lr','c'],['Grip','any','b']],
  dudley:[['Sight left/right (close, from 5 m)','lr','c'],['Arrow rest left/right (far, after you walk back)','lr','c'],['Yoke twists (no rest move)','lr','c']],
  group:[['Nocking point (small steps)','ud','b'],['Rest height','ud','b'],['Point weight','pt','b'],['Draw weight','ud','b'],['Brace height','hl','b'],['Tiller','id','r'],['Plunger spring','sp','r'],['Yoke twists','lr','c'],['Cam timing','tw','c']],
- creep:[['Cam timing (cable/string twists)','tw','c'],['Drop-away timing','et','c']],
+ creep:[['Cam timing (cable/string twists)','tw','c']],
  walk:[['Plunger in/out (centre shot)','io','r'],['Plunger spring tension','sp','r'],['Nocking point (only if the vertical spread is bad)','ud','r']]};
 const tWhat=k=>(WHAT[k]||WHAT.group).concat([['Other','any','b']]);
 function eastonLink(p){const S2=window.ARROW_SRC||{},t=S2.eastonTM;return t?`<a href="${t[1]}" target="_blank" rel="noopener">Easton Arrow Tuning and Maintenance Guide</a>${p?', '+p:''}`:`Easton Arrow Tuning and Maintenance Guide${p?', '+p:''}`}
@@ -235,8 +235,8 @@ function tearSvg(c){const v={u:[0,-1],d:[0,1],l:[-1,0],r:[1,0],ul:[-.7,-.7],ur:[
 function tearHint(c,bt,lh){if(c=='b')return`<li><b>Bullet hole:</b> no change. Log it as your baseline. Paper after setup so you know your normal tear.</li>`;
  const v=c[0]=='u'||c[0]=='d'?c[0]:'',hz=/[lr]$/.test(c)?c.slice(-1):'',comp=bt!='r',out=[];
  if(v&&hz)out.push(`<li>Two things at once: fix the up/down part first, then the left/right (Easton: correct the vertical pattern, the nocking point, first, then the horizontal).</li>`);
- if(v=='u')out.push(`<li><b>Nock high:</b> lower the nocking point or raise the rest.${comp?` Also check the drop-away isn't lifting late. A blade rest that's too stiff can tear high.`:''}</li>`);
- if(v=='d')out.push(`<li><b>Nock low:</b> raise the nocking point or lower the rest. Check vane clearance${comp?' and drop-away timing':''}.${comp?` A blade that's too weak can tear low or vary vertically.`:''}</li>`);
+ if(v=='u')out.push(comp?`<li><b>Nock high:</b> lower the nocking point or raise the rest. Also check the drop-away isn't lifting late. A blade rest that's too stiff can tear high.</li>`:`<li><b>Nock high:</b> lower the nocking point.</li>`);
+ if(v=='d')out.push(comp?`<li><b>Nock low:</b> raise the nocking point or lower the rest. Check vane clearance and drop-away timing. A blade that's too weak can tear low or vary vertically.</li>`:`<li><b>Nock low:</b> raise the nocking point. Check vane clearance.</li>`);
  if(hz){const L=hz=='l',rh=lh?!L:L;/* rh = reads as a right-handed nock-left tear */
   out.push(comp?`<li><b>Nock ${L?'left':'right'}:</b> move the rest to the <b>${(L?!lh:lh)?'right':'left'}</b> (Easton, release aid${lh?', mirrored for a left-handed archer':', right-handed'}), or use yoke twists instead (yoke alone is fine, the rest can stay at centre), then spine / point weight, then grip torque.</li>`
    :`<li><b>Nock ${L?'left':'right'}:</b> spine first: this reads <b>${rh?'stiff':'weak'}</b>${lh?' (left-handed, so mirrored)':''}. Then plunger spring or position, point weight, draw weight.</li>`)}
@@ -246,7 +246,7 @@ function paperBlock(T,g){const P=T.paper=T.paper||{before:[],after:[]},L=P[g]||[
  const pad=`<div class="tpad" id="tpad" role="group" aria-label="Tear shapes. Tap one per arrow.">${TEAR.map(([c,n])=>`<button type="button" data-tear="${c}" aria-label="${n}">${tearSvg(c)}<span>${n.replace('Nock ','')}${cnt[c]?` <b class="tpc">${cnt[c]}</b>`:''}</span></button>`).join('')}</div>`;
  const list=L.length?`<p class="small" id="tearlist" style="margin:8px 0 0">${L.length} arrow${L.length==1?'':'s'}: ${Object.entries(cnt).map(([c,n])=>`${h(tearName(c))} ×${n}`).join(', ')}</p>`:`<p class="small muted" id="tearlist" style="margin:8px 0 0">Tap the tear shape for each arrow.</p>`;
  return{pad,list,top:top?top[0]:null,last}}
-function paperHints(T,code){if(!code)return'';return`<div class="lab-note" id="tearhint"><p style="margin:0"><b>Most common tear: ${h(tearName(code))}</b> <span class="small muted">(${T.bt=='r'?'recurve':'compound'}${T.hand=='L'?', left-handed':', right-handed'})</span></p><ul style="margin:6px 0 0;padding-left:18px">${tearHint(code,T.bt,T.hand=='L')}</ul><p class="small muted" style="margin:6px 0 0">Change one thing at a time, then shoot through the paper again. Easton: release aid archers sometimes need the opposite adjustment.</p><p class="labsrc">${eastonLink('pp. 7-8')}</p></div>`}
+function paperHints(T,code){if(!code)return'';return`<div class="lab-note" id="tearhint"><p style="margin:0"><b>Most common tear: ${h(tearName(code))}</b> <span class="small muted">(${T.bt=='r'?'recurve':'compound'}${T.hand=='L'?', left-handed':', right-handed'})</span></p><ul style="margin:6px 0 0;padding-left:18px">${tearHint(code,T.bt,T.hand=='L')}</ul><p class="small muted" style="margin:6px 0 0">Change one thing at a time, then shoot through the paper again.</p><p class="labsrc">${eastonLink('pp. 7-8')}</p></div>`}
 function crossSvg(T,rcm,k){const s=rcm/(T.face?rcm:SPAN),lines=(k=='torque'||k=='dudley')?'v':'vh',grid=[];
  const step=5/rcm;for(let i=step;i<1.05;i+=step){grid.push(`<path d="M${i} -1.05V1.05M${-i} -1.05V1.05M-1.05 ${i}H1.05M-1.05 ${-i}H1.05" stroke="var(--tgrid,#cbd5e1)" stroke-width="0.004"/>`)}
  const L=(lines.includes('v')?`<path d="M0 -1.05V1.05" stroke="#1d4ed8" stroke-width="0.016"/>`:'')+(lines.includes('h')?`<path d="M-1.05 0H1.05" stroke="#1d4ed8" stroke-width="0.016"/>`:'');
@@ -313,7 +313,8 @@ E.lab_opt=function(){S.tune=S.tune||[];
  const B=paper||tq?null:gstats(T.before,rcm),A=paper||tq?null:gstats(T.after,rcm);
  const LB=bare?'Fletched':creep?'Full draw':'Before',LA=bare?'Bare':creep?'Crept':'After';
  const line=(nm,s)=>s?`<tr><th>${nm}</th><td>${s.n}</td><td>${cm(s.mr*2)} cm</td><td>${cm(s.es)} cm</td><td>${dir(s.cx,s.cy)}</td></tr>`:`<tr><th>${nm}</th><td colspan="4" class="muted">No arrows yet</td></tr>`;
- let cmp='';if(tq)cmp=torqueVerdict(T,rcm);else if(bare)cmp=bareVerdict(T,B,A);else if(!paper&&B&&A&&B.n>1&&A.n>1){const d=Math.round((1-A.mr/B.mr)*100);cmp=`<p class="lab-note">After the change the group is <b>${Math.abs(d)}% ${d>=0?'tighter':'wider'}</b> (average spread ${cm(B.mr*2)} → ${cm(A.mr*2)} cm) and its centre moved ${dir(A.cx-B.cx,A.cy-B.cy)}.</p>`}
+ let cmp='';if(tq)cmp=torqueVerdict(T,rcm);else if(bare)cmp=bareVerdict(T,B,A);else if(creep&&B&&A&&B.n>1&&A.n>1){const drop=A.cy-B.cy,sp=Math.max(B.mr,0.02);cmp=`<p class="lab-note" id="creepverdict">The crept group is <b>${Math.abs(drop)<=sp?'at a similar height to the full-draw group':`${cm(Math.abs(drop))} cm ${drop>0?'low':'high'} of the full-draw group`}</b>. ${drop>sp?'Adjust cam timing only, then test again.':'Creep tune only adjusts cam timing.'}</p>`}
+ else if(!paper&&B&&A&&B.n>1&&A.n>1){const d=Math.round((1-A.mr/B.mr)*100);cmp=`<p class="lab-note">After the change the group is <b>${Math.abs(d)}% ${d>=0?'tighter':'wider'}</b> (average spread ${cm(B.mr*2)} → ${cm(A.mr*2)} cm) and its centre moved ${dir(A.cx-B.cx,A.cy-B.cy)}.</p>`}
  const pp=paper?paperBlock(T,g):null;
  const seg=one?'':`<div class="labseg" role="group" aria-label="Which group"><button data-g="before" aria-pressed="${g=='before'}">${paper||tq?'':'● '}${LB}</button><button data-g="after" aria-pressed="${g=='after'}">${paper||tq?'':'■ '}${LA}</button></div>`;
  const sides=tq?`<div class="labseg" role="group" aria-label="Torque direction" id="tsides"><button data-side="L" aria-pressed="${side=='L'}">Torqued left</button><button data-side="R" aria-pressed="${side=='R'}">Torqued right</button></div>
@@ -413,7 +414,7 @@ function bareCard(T,B,A){const S2=window.ARROW_SRC||{},tm=S2.eastonTM?`<a href="
  return head+out.join('')+`</div><div class="card" id="nextcard"><span class="kicker">Next step to try</span><p class="small" style="margin:2px 0 8px">Starting points from Easton's guide. Change one thing at a time, then shoot the test again.</p>
  <table class="labtbl"><tbody>
  <tr><th>${weak?'Lighter':'Heavier'} point or insert</th><td>${weak?'−':'+'}25 gr is a first step to try (Easton's chart counts 25 gr as 3 lb of bow weight)<br><span class="small">${focTxt(pt)}</span></td></tr>
- ${comp?`<tr><th>Rest left/right</th><td>Move the rest a little ${weak?'toward':'away from'} the weak/stiff reading, or use yoke / cam lean instead (the rest can stay at centre)<br><span class="small">FOC unchanged</span></td></tr>
+ ${comp?`<tr><th>Rest left/right</th><td>Move the rest a little ${weak?'out, away from the bow':'in, toward the bow'} (Easton), or use yoke / cam lean instead (the rest can stay at centre)<br><span class="small">FOC unchanged</span></td></tr>
  <tr><th>Yoke or cam</th><td>Yoke twists or cam lean, then re-test<br><span class="small">FOC unchanged</span></td></tr>`
  :`<tr><th>Cushion plunger</th><td>${weak?'Increase':'Decrease'} spring tension<br><span class="small">FOC unchanged</span></td></tr>`}
  <tr><th>Draw weight</th><td>${weak?'Decrease':'Increase'} it slightly, if your bow weight is adjustable<br><span class="small">FOC unchanged (the formula has no draw weight in it)</span></td></tr>

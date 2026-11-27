@@ -4,6 +4,18 @@ Newest first. Each entry names the version tag shown in Settings.
 
 
 
+## v2026-11-27-1705-tuneaudit: Tune helper checked against Coach and Easton, and the broken steps fixed
+- Nathe, 27 Nov about 4:54pm Perth: don't hand over steps that don't fit Coach or don't work. A full pass of the live pr/91 Tune helper (compound and recurve, phone size, sample data) found and fixed:
+  - **Draw weight / spine** now opens the Arrow chooser (the makers' charts), not Calculators.
+  - **Paper, recurve:** a nock-high or nock-low tear now says to move the nocking point only, not the rest.
+  - **Bare shaft, compound:** the rest direction is Easton's in toward / out away from the bow (the old "toward the weak/stiff reading" line was the wrong way for a stiff reading).
+  - **Creep:** What I changed is cam timing only, and the verdict is whether the crept group dropped, not group tightness.
+  - **Bow setup:** a short Coach checklist is shown when you arrive from Tune helper. Recurve bows can now store brace height and tiller.
+- Recurve Walk back still does not invent a plunger direction (Easton has no walk-back test). Cache `v2026-11-27-1705-tuneaudit`. Not merged until go-live.
+
+### Files
+lab.js, tune.js, bows.js, test/lab.js, test/tune.js, test/bows.js, tools/tuning_test.py, index.html, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
+
 ## v2026-11-27-1639-walkback: Walk back tune uses the Dudley rules, with a vertical line and 5 m sight
 - **Walk back tune** (Nathe, 27 Nov, about 4:36pm Perth: same rules as the Dudley tune, just named Walk back). Keep your sight set at 5 m, aim at the tip of the vertical line, then walk back and plot where the arrows land — that shows how far the sight is out. The close/far rules are unchanged: close miss = move the sight, far miss = move the rest and leave the sight alone, both on the line = done, yoke twists if the rest would end up well off centre. The plot is a vertical line (not a horizontal one). Old "Dudley / yoke tune" sessions still open under this name. Recurve Walk back tune is unchanged (plunger walk-back).
 - Cache version is `v2026-11-27-1639-walkback`. Not merged until go-live.

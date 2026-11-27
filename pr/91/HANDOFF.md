@@ -4,6 +4,14 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 17:05 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: Branch `cursor/tuning-overhaul` (cache `v2026-11-27-1705-tuneaudit`), PR #91. Nathe t1239u: audited the live pr/91 Tune helper at phone size, compound and recurve, against Archery Coach's 26 Nov order and Easton's guide, with sample data. Fixes: Draw weight / spine opens Arrow chooser (not Calculators); recurve paper vertical tears no longer say "move the rest"; compound bare-shaft rest direction uses Easton in/out; Creep What I changed is cam timing only and the verdict is drop, not tightness; Bow setup shows Coach's checklist; recurve bow form has brace height and tiller.
+- Tests: tools/tuning_test.py 104/104, safety-smoke 15/15, privacy-scan pass. Gating unchanged.
+- Half-done: PR only, not merged. Needs Nathe's "go". Recurve Walk back plunger direction left unstated (Easton has no walk-back test) — needs Coach if he wants a direction rule. My bows is still a specs form, not a cam-timing / nock / rest-centre log; the new checklist covers those.
+- Screenshots: /workspace/st-tuning/audit91/ after republish.
+
 ## 27 Nov 2026, 16:39 AWST — [Jarvis]
 
 - Who: Jarvis.

@@ -7,8 +7,8 @@ const h=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;
 const KEY='scoretool.tunehelper.bt';
 const COMPOUND=[
  ['setup','Bow setup','Set draw length, draw weight, cam timing and a level nock, with the rest centred.','bows',null],
- ['spine','Draw weight / spine','Pick the spine from the maker\'s chart at your final draw weight, length and point weight.','calc',null],
- ['cut','Cut length','Cut to the shortest safe length, about 1 in past the rest at full draw.','cut',null],
+ ['spine','Draw weight / spine','Pick the spine from the maker\'s chart at your final draw weight, length and point weight.','chooser','res'],
+ ['cut','Cut length','Cut to the shortest safe length, about 1 in past the rest at full draw.','chooser','cut'],
  ['paper','Paper','Shoot through paper at about 4-6 ft and fix gross tears.','opt','Paper tune'],
  ['bare','Bare shaft','Compare bare and fletched arrows left and right, and fine-tune the rest, yoke or spine.','opt','Bare shaft vs fletched'],
  ['creep','Creep','Shoot a group at full draw and a group with a shortened draw. If the crept group drops, adjust cam timing only.','opt','Creep tune'],
@@ -18,8 +18,8 @@ const COMPOUND=[
 ];
 const RECURVE=[
  ['setup','Bow setup','Set brace height, tiller, limb-bolt weight, a starting nocking point, and centre shot with the plunger.','bows',null],
- ['spine','Draw weight / spine','Use the chart for the weight at your draw length, not the limb marking, plus point weight.','calc',null],
- ['cut','Cut length','Leave about 1 in past the plunger at full draw, or cut to suit the clicker.','cut',null],
+ ['spine','Draw weight / spine','Use the chart for the weight at your draw length, not the limb marking, plus point weight.','chooser','res'],
+ ['cut','Cut length','Leave about 1 in past the plunger at full draw, or cut to suit the clicker.','chooser','cut'],
  ['paper','Paper (optional)','A quick flight check at about 4-6 ft, before bare shaft. Less reliable with fingers than bare shaft.','opt','Paper tune'],
  ['bare','Bare shaft','The main recurve tune: height first, then left and right with point weight, plunger spring or limb bolts.','opt','Bare shaft vs fletched'],
  ['walk','Walk back tune','Shoot one vertical line at several distances and adjust the plunger.','opt','Walk back tune'],
@@ -33,8 +33,9 @@ function curBt(){
 function setBt(bt){try{localStorage.setItem(KEY,bt)}catch(e){}}
 function go(s){
  if(s[3]=='opt'){window._tunePref=s[4];window._tuneBt=curBt();nav('lab_opt')}
+ else if(s[3]=='bows'){window._tuneSetup=curBt();nav('lab_mybows')}
+ else if(s[3]=='chooser'){if(window.acGo&&s[4])acGo(s[4]);else nav('lab_chooser')}
  else if(s[3]=='calc')nav('lab_calc');
- else if(s[3]=='bows')nav('lab_mybows');
  else if(window.acGo)acGo('cut');else nav('lab_chooser');
 }
 E.lab_tune=function(){
