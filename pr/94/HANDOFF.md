@@ -4,6 +4,12 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 22:30 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: Same PR #94 / cache `v2026-11-27-2220-walkback`. Rebuilt `test/sw.js` and `test/version.json`. The /test/ service worker was still on `v2026-11-25-1025-audit2-test` and its precache omitted `walkback.js`, so the /test/ preview was an old copy. It now uses the same 2220 tag, precaches walkback.js, and still uses the `scoretool-test-` cache prefix so it cannot delete the main app cache.
+- Half-done: Republish pr/94 and redo the full real-click play-through at 390 and 1280, main and /test/. Preview only — do not merge. Bhutan is not in this PR.
+
 ## 27 Nov 2026, 22:20 AWST — [Jarvis]
 
 - Who: Jarvis.

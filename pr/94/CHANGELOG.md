@@ -7,9 +7,10 @@ Newest first. Each entry names the version tag shown in Settings.
 ## v2026-11-27-2220-walkback: Walk back start screen is not locked on Compound
 
 - Compound, Recurve and Barebow on the Walk back start screen can be changed freely, including after a saved compound bow has pre-filled the form. Draw weight, target height (including Custom) and optional speed all update the suggested distances live, and Start shooting works even if you go straight from typing a custom height. Preview only — not live until Nathe says go live 94. Cache `v2026-11-27-2220-walkback`.
+- The /test/ copy’s service worker is on the same cache tag and now includes walkback.js. It had been left on an older tag, so /test/ was serving a stale app.
 
 ### Files
-lab.js, test/lab.js, tools/tuning_test.py, index.html, test/index.html, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
+lab.js, test/lab.js, tools/tuning_test.py, index.html, test/index.html, test/sw.js, test/version.json, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
 
 ## v2026-11-27-1951-walkback: Walk back stop-zone label fits on small target faces
 
