@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en-AU"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ScoreTool · Bhutan scoring (test)</title>
+<meta name="description" content="Test page for traditional Bhutanese Datse, Khuru and Degor team scoring.">
+<link rel="icon" href="favicon-32.png">
+<link rel="stylesheet" href="style.css">
+<style>
+:root{
+  --royal:#1d4ed8;
+  --neon:#38e1ff;
+  --ink:#0f172a;
+  --muted:#475569;
+  --line:#d6dde8;
+  --bg:#f4f7fb;
+  --card:#fff;
+  --danger:#b91c1c;
+}
+html,body{background:var(--bg)!important;color:var(--ink)!important;font:16px/1.45 var(--body);margin:0;height:auto!important;overflow:auto!important;min-height:100dvh}
+body{padding-bottom:env(safe-area-inset-bottom,0)}
+#app{max-width:430px;margin:0 auto;padding:0 12px 28px;overflow:visible}
+.top{display:flex;align-items:center;gap:8px;margin:0 -12px 12px;padding:10px 12px;background:var(--royal)!important;color:#fff!important;border-bottom:0!important;position:sticky;top:0;z-index:5}
+.top a{color:#fff!important;font-weight:700;text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.top h1{font:800 26px var(--disp);text-transform:uppercase;letter-spacing:.03em;margin:0;flex:1;color:#fff}
+.badge{background:var(--neon);color:#0b0f17;font:800 11px var(--body);letter-spacing:.08em;text-transform:uppercase;border-radius:99px;padding:3px 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
+.kicker{color:var(--royal);font:700 13px var(--disp);letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:4px}
+.modes,.segs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modes{margin:8px 0}
+button.seg,button.mode,button.act,button.undo,button.start,button.ghost{
+  appearance:none;border:2px solid var(--royal);background:#fff;color:var(--ink);
+  border-radius:14px;font:800 16px var(--body);min-height:52px;padding:10px 12px;cursor:pointer;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent
+}
+button.mode{text-align:left;line-height:1.2}
+button.mode small{display:block;font:600 12px var(--body);color:var(--muted);text-transform:none;letter-spacing:0}
+button.mode.on,button.seg.on{background:var(--royal);color:#fff;border-color:var(--royal)}
+button.mode.on small{color:var(--neon)}
+.note{background:#eef7ff;border:2px solid var(--neon);border-radius:12px;padding:10px 12px;margin:8px 0 0;font-size:14px}
+.note b{color:var(--royal)}
+label.fld{display:block;font-weight:700;margin:10px 0 4px}
+input[type=text],input[type=number],select{width:100%;min-height:48px;font:16px var(--body);border:1px solid #94a3b8;border-radius:10px;padding:11px;background:#fff;color:var(--ink)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button.start{width:100%;background:var(--royal);color:#fff;border-color:var(--royal);font:800 20px var(--disp);text-transform:uppercase;letter-spacing:.04em;min-height:58px;margin-top:8px}
+.board{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;text-align:center}
+.team{background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px 8px}
+.team.on{border-color:var(--royal);box-shadow:0 0 0 3px rgba(29,78,216,.18)}
+.team .nm{font:800 14px var(--disp);text-transform:uppercase;letter-spacing:.04em;color:var(--royal)}
+.team .sc{font:800 48px var(--disp);line-height:1;color:var(--ink)}
+.vs{font:800 16px var(--disp);color:var(--muted);align-self:center}
+.sets{font:700 13px var(--body);color:var(--muted);margin-top:4px}
+.status{text-align:center;margin:0 0 12px}
+.status .way{color:var(--royal);font:800 15px var(--disp);text-transform:uppercase;letter-spacing:.06em}
+.status p{margin:4px 0 0}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+button.act{min-height:64px;font:800 18px var(--disp);text-transform:uppercase;letter-spacing:.03em;line-height:1.15}
+button.act small{display:block;font:700 12px var(--body);letter-spacing:0;text-transform:none;margin-top:2px}
+button.act.royal{background:var(--royal);color:#fff;border-color:#1e3a8a}
+button.act.neon{background:var(--neon);color:#0b0f17;border-color:#0891b2}
+button.act.ghost{background:#fff}
+button.undo{width:100%;background:#fff;color:var(--royal);margin-top:4px}
+button.ghost{width:100%;margin-top:8px;color:var(--royal)}
+.cancels{margin-top:10px}
+.cancels li{margin:4px 0}
+.winner{background:var(--royal);color:#fff;border-radius:16px;padding:16px;text-align:center;margin:0 0 12px}
+.winner h2{color:#fff;margin:0 0 6px;font-size:28px}
+.winner .neon{color:var(--neon)}
+.hist{font-size:14px;max-height:200px;overflow:auto}
+.hist div{border-top:1px solid var(--line);padding:6px 0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.warn{color:var(--danger);font-weight:700}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script src="bhutan_score.js"></script>
+<script src="bhutan.js"></script>
+</body></html>

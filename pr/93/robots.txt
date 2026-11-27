@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nfstride1-ux.github.io/scoretool-demo/sitemap.xml

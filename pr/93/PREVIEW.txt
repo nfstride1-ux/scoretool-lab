@@ -1,0 +1,5 @@
+This folder is a pull-request preview of ScoreTool.
+It is not the live app at scoretool-demo.
+Personal scoresheets and sight-mark files are not copied here.
+
+Bhutan scoring (test) is at bhutan.html, and also under Tools.

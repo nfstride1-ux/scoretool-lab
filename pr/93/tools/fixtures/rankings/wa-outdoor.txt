@@ -1,0 +1,4 @@
+Place  Archer            Class  Gender  Division  State              Club                  Current
+1      Ada Archer        Open   Female  Compound  Western Australia  Club A                88.0
+2      Nathaniel Stride  Open   Male    Compound  Western Australia  Gosnells Archers Inc  40.0
+3      Ben Bowman        Open   Male    Recurve   Western Australia  Club B                33.0
