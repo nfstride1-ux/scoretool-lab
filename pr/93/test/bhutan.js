@@ -10,6 +10,7 @@
   let match = null;
   let lastNotes = [];
   let flash = '';
+  let lastSet = null;
 
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -17,6 +18,8 @@
       match = saved.match;
       match.history = match.history || [];
       lastNotes = saved.lastNotes || [];
+      lastSet = saved.lastSet || null;
+      flash = saved.flash || '';
     }
   } catch (e) { match = null; }
 
@@ -31,7 +34,7 @@
   function persist() {
     try {
       localStorage.setItem(KEY + '.setup', JSON.stringify(setup));
-      if (match) localStorage.setItem(KEY, JSON.stringify({ match: { ...match, history: match.history }, lastNotes }));
+      if (match) localStorage.setItem(KEY, JSON.stringify({ match: { ...match, history: match.history }, lastNotes, lastSet, flash }));
       else localStorage.removeItem(KEY);
     } catch (e) {}
   }
@@ -78,6 +81,7 @@
     match = B.createMatch(setup);
     lastNotes = [];
     flash = '';
+    lastSet = null;
     persist();
     render();
   }
@@ -86,6 +90,7 @@
     match = null;
     lastNotes = [];
     flash = '';
+    lastSet = null;
     persist();
     render();
   }
@@ -135,20 +140,33 @@
     return [];
   }
 
+  function finishedSet() {
+    if (!match || !match.sets.length) return null;
+    if (match.matchWinner) return match.sets[match.sets.length - 1];
+    if (match.sets.length >= 2 && match.sets[match.sets.length - 2].winner) {
+      return match.sets[match.sets.length - 2];
+    }
+    const last = match.sets[match.sets.length - 1];
+    return last.winner ? last : null;
+  }
+
   function applyScored(scored) {
     lastNotes = liveNotes(scored);
     if (!scored || scored.pendingCloser) {
-      flash = '';
       persist(); render();
       return;
     }
-    if (scored.matchJustWon) {
-      const n = match.settings.names[scored.matchJustWon];
-      flash = n + ' win the match';
-    } else if (scored.setJustWon) {
-      const n = match.settings.names[scored.setJustWon];
-      const kind = setup.mode === 'degor' ? 'game' : 'set';
-      flash = n + ' win the ' + kind;
+    const kind = setup.mode === 'degor' ? 'game' : 'set';
+    if (scored.setJustWon || scored.matchJustWon) {
+      const fin = finishedSet();
+      lastSet = fin ? { a: fin.a, b: fin.b, winner: fin.winner, kind: kind } : null;
+      const scoreBit = lastSet ? (' ' + lastSet.a + '–' + lastSet.b) : '';
+      const n = match.settings.names[scored.matchJustWon || scored.setJustWon];
+      if (scored.matchJustWon) {
+        flash = n + ' win the match' + (scoreBit ? (' · last ' + kind + scoreBit) : '');
+      } else {
+        flash = n + ' win the ' + kind + scoreBit;
+      }
     } else {
       flash = '';
     }
@@ -159,6 +177,7 @@
     if (!match || !B.undo(match)) return;
     lastNotes = B.liveTotals(match).notes || [];
     flash = '';
+    lastSet = finishedSet() ? { a: finishedSet().a, b: finishedSet().b, winner: finishedSet().winner, kind: setup.mode === 'degor' ? 'game' : 'set' } : null;
     persist(); render();
   }
 
@@ -324,8 +343,8 @@
       : '';
 
     const winCard = match.matchWinner
-      ? `<div class="winner" id="wincard"><h2>${esc(names[match.matchWinner])} win</h2><p class="neon">${esc(B.modeLabel(s.mode))} · ${esc(winLine)}</p><p>Sets ${match.setWins.a}–${match.setWins.b}</p></div>`
-      : (flash ? `<div class="winner"><h2>${esc(flash)}</h2></div>` : '');
+      ? `<div class="winner" id="wincard"><h2>${esc(names[match.matchWinner])} win</h2><p class="neon">${esc(B.modeLabel(s.mode))} · ${esc(winLine)}</p>${lastSet ? `<p>Last ${esc(lastSet.kind)} ${lastSet.a}–${lastSet.b}</p>` : ''}<p>Sets ${match.setWins.a}–${match.setWins.b}</p></div>`
+      : (flash ? `<div class="winner" id="wincard"><h2>${esc(flash)}</h2>${lastSet ? `<p class="neon">That ${esc(lastSet.kind)} finished ${lastSet.a}–${lastSet.b}. The next ${esc(lastSet.kind)} is on the board at 0.</p>` : ''}</div>` : '');
 
     function teamCard(side, on) {
       const total = side === 'a' ? live.totalA : live.totalB;

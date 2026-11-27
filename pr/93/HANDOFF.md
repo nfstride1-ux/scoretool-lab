@@ -4,6 +4,12 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 17:17 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: After a set or game win, the banner now shows the finished score (for example “Blue win the set 6–1”) and says the next set is on the board at 0, so the totals do not look like they reset for no reason. Still on PR #93 only. Cache now in version.json ({"version": "v2026-11-27-1717-bhutanlive"}).
+- Half-done: PR only, not merged. Needs Nathe's "go". Lab preview pr/93 to be republished after this commit.
+
 ## 27 Nov 2026, 17:04 AWST — [Jarvis]
 
 - Who: Jarvis.
