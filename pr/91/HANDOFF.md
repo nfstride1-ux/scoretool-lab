@@ -4,6 +4,13 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 18:44 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: Branch `cursor/tuning-overhaul` (cache `v2026-11-27-1844-tunelive`), PR #91. Nathe t1240u / t1242u: go-live for tuning except Walk back tune (held back to fix later) and the extra "Just a group" option (removed). Group tune stays on compound and recurve. Old Walk back / Dudley sessions still open. Bhutan PR #93 is not included.
+- Tests: tools/tuning_test.py 104/104, tier_gate_test.py 195/195, safety-smoke 15/15, privacy-scan pass. Gating unchanged. Lingkana untouched.
+- Half-done: Merge only after the preview is played through (including Group tune). Then merge #91 and verify on the live ScoreTool site. Walk back still needs a later fix.
+
 ## 27 Nov 2026, 17:05 AWST — [Jarvis]
 
 - Who: Jarvis.

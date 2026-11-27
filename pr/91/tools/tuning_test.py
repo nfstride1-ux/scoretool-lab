@@ -47,6 +47,14 @@ def start(pg, tune, name='', bt=None):
     if bt: pg.click(f'[data-nbt={bt}]'); pg.wait_for_timeout(150)
     if name: pg.fill('#tn', name)
     pg.click('#tgo'); pg.wait_for_timeout(400)
+def open_held(pg, change, bt='c', name=''):
+    """Open a held-back session (Walk back) without using the live picker."""
+    pg.evaluate("""([change,bt,name]) => {
+      window._tunePref=null; window._tuneBt=null; window._tuneOffer=null;
+      const t={id:'t-held-'+Date.now(),archer:S.profile,date:new Date().toLocaleDateString('en-CA'),name:name||'',change,dist:'18m',span:20,bt:bt,before:[],after:[],grp:'before',changes:[]};
+      S.tune=S.tune||[]; S.tune.push(t); S._tuneId=t.id; save(); nav('lab_opt');
+    }""", [change, bt, name])
+    pg.wait_for_timeout(400)
 def tap(pg, fx, fy):
     pg.locator('#tface').scroll_into_view_if_needed(); bx = pg.locator('#tface').bounding_box(); pg.mouse.click(bx['x'] + bx['width'] * fx, bx['y'] + bx['height'] * fy); pg.wait_for_timeout(200)
 def cur(pg): return pg.evaluate("JSON.parse(JSON.stringify(S.tune.find(t=>t.id==S._tuneId)||null))")
@@ -72,7 +80,7 @@ try:
         chk('bow line is Concept X 40, 327 fps (mismatch fixed)', 'Concept X 40' in bl and '327' in bl and '37' not in bl.replace('7.25', ''), bl)
         chk('bow picker label has no Concept X 37', 'Concept X 37' not in pg.inner_text('#t_mybow'))
         tunes = pg.evaluate("[...document.querySelectorAll('#tc option')].map(o=>o.value)")
-        chk('tune list', tunes[:6] == ['Paper tune', 'Bare shaft vs fletched', 'Torque tune', 'Walk back tune', 'Creep tune', 'Group tune'], tunes)
+        chk('tune list', tunes == ['Paper tune', 'Bare shaft vs fletched', 'Torque tune', 'Creep tune', 'Group tune', 'Other'] and 'Walk back tune' not in tunes and 'Just a group' not in tunes, tunes)
         chk('390px no sideways scroll (form)', pg.evaluate("document.documentElement.scrollWidth") <= 392)
         shot(pg, '01-new-session.png')
         # paper tune
@@ -137,18 +145,22 @@ try:
         chk('torque: after verdict closer together or on the line', ('closer together' in v or 'sit on the line' in v) and 'George' not in v and 'Ryles' not in v, v)
         chk('torque: hint has no George', 'George' not in pg.inner_text('#app') and 'Ryles' not in pg.inner_text('#app') and 'torqued left' in pg.inner_text('#app').lower())
         pg.locator('#tface').scroll_into_view_if_needed(); shot(pg, '04-torque.png')
-        for tune, lines, fn, bt in [('Walk back tune', 'v', '05-walkback-compound.png', 'c'), ('Group tune', 'vh', '06-group.png', None)]:
-            start(pg, tune, bt=bt); chk(f'{tune} {bt or "default"}: crosshair lines={lines}', pg.get_attribute('#tface', 'data-lines') == lines)
-            tap(pg, 0.6, 0.45); tap(pg, 0.55, 0.5); tap(pg, 0.62, 0.52)
-            chk(f'{tune}: plotted 3', len(cur(pg)['before']) == 3)
-            if tune == 'Walk back tune':
-                wi = pg.evaluate("[...document.querySelectorAll('#wi option')].map(o=>o.textContent)")
-                chk('Walk back tune (compound) list: sight, rest, yoke; no Dudley/George marks', wi[0].startswith('Sight left/right') and wi[1].startswith('Arrow rest left/right') and any('Yoke twists' in x for x in wi) and not any('George' in x or 'Ryles' in x or 'Dudley' in x for x in wi) and 'Dudley' not in pg.inner_text('#app'), wi)
-                note=(pg.inner_text('#walknote') if pg.locator('#walknote').count() else pg.inner_text('#app')).lower()
-                chk('Walk back tune (compound): 5 m sight, tip of the vertical line, same close/far rules', '5 m' in note and 'tip of the vertical line' in note and 'walk back' in note and 'close miss' in note and 'move the sight' in note and 'far miss' in note and 'move the rest' in note and 'dudley' not in note, note)
-            shot(pg, fn)
-        # recurve Walk back tune (old Walk-back)
-        start(pg, 'Walk back tune', bt='r')
+        open_held(pg, 'Walk back tune', bt='c')
+        chk('Walk back tune c: crosshair lines=v', pg.get_attribute('#tface', 'data-lines') == 'v')
+        tap(pg, 0.6, 0.45); tap(pg, 0.55, 0.5); tap(pg, 0.62, 0.52)
+        chk('Walk back tune: plotted 3', len(cur(pg)['before']) == 3)
+        wi = pg.evaluate("[...document.querySelectorAll('#wi option')].map(o=>o.textContent)")
+        chk('Walk back tune (compound) list: sight, rest, yoke; no Dudley/George marks', wi[0].startswith('Sight left/right') and wi[1].startswith('Arrow rest left/right') and any('Yoke twists' in x for x in wi) and not any('George' in x or 'Ryles' in x or 'Dudley' in x for x in wi) and 'Dudley' not in pg.inner_text('#app'), wi)
+        note=(pg.inner_text('#walknote') if pg.locator('#walknote').count() else pg.inner_text('#app')).lower()
+        chk('Walk back tune (compound): 5 m sight, tip of the vertical line, same close/far rules', '5 m' in note and 'tip of the vertical line' in note and 'walk back' in note and 'close miss' in note and 'move the sight' in note and 'far miss' in note and 'move the rest' in note and 'dudley' not in note, note)
+        shot(pg, '05-walkback-compound.png')
+        start(pg, 'Group tune')
+        chk('Group tune default: crosshair lines=vh', pg.get_attribute('#tface', 'data-lines') == 'vh')
+        tap(pg, 0.6, 0.45); tap(pg, 0.55, 0.5); tap(pg, 0.62, 0.52)
+        chk('Group tune: plotted 3', len(cur(pg)['before']) == 3)
+        shot(pg, '06-group.png')
+        # recurve Walk back tune still opens if you already have a session
+        open_held(pg, 'Walk back tune', bt='r')
         wt = pg.inner_text('#walkeaston')
         chk('walk-back: Easton plunger note', 'no walk-back test' in wt and 'p. 12' in wt and 'spring tension only' in wt, wt)
         pg.locator('#walkeaston').scroll_into_view_if_needed(); shot(pg, '07-walkback.png')
@@ -208,7 +220,7 @@ try:
         th = pg.inner_text('#tunehelper')
         chk('helper: compound default', pg.locator('[data-thbt=c][aria-pressed=true]').count() == 1)
         steps = pg.evaluate("[...document.querySelectorAll('#thsteps b')].map(b=>b.textContent)")
-        chk('helper: compound order', steps == ['1. Bow setup', '2. Draw weight / spine', '3. Cut length', '4. Paper', '5. Bare shaft', '6. Creep', '7. Torque', '8. Walk back tune', '9. Group tune'], steps)
+        chk('helper: compound order', steps == ['1. Bow setup', '2. Draw weight / spine', '3. Cut length', '4. Paper', '5. Bare shaft', '6. Creep', '7. Torque', '8. Group tune'], steps)
         chk('helper: compound has no George', 'George' not in th and 'Ryles' not in th)
         chk('helper: no Node / nocking point step', pg.locator('[data-tn=node]').count()==0 and all('Node' not in s for s in steps), steps)
         pg.locator('#tunehelper').scroll_into_view_if_needed(); shot(pg, '10-tunehelper-compound.png'); shot(pg, '17-helper-compound.png')
@@ -229,16 +241,18 @@ try:
         pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
         pg.click('[data-thbt=r]'); pg.wait_for_timeout(300)
         steps = pg.evaluate("[...document.querySelectorAll('#thsteps b')].map(b=>b.textContent)")
-        chk('helper: recurve order', steps == ['1. Bow setup', '2. Draw weight / spine', '3. Cut length', '4. Paper (optional)', '5. Bare shaft', '6. Walk back tune', '7. Group tune'], steps)
+        chk('helper: recurve order', steps == ['1. Bow setup', '2. Draw weight / spine', '3. Cut length', '4. Paper (optional)', '5. Bare shaft', '6. Group tune'], steps)
         th = pg.inner_text('#tunehelper')
         chk('helper: recurve steps omit Torque; no Dudley label; creep is a form note', all('Torque' not in s and 'Dudley' not in s for s in steps) and 'form note' in th.lower() and 'George' not in th and 'Ryles' not in th and 'Dudley' not in th, steps)
         pg.locator('#tunehelper').scroll_into_view_if_needed(); shot(pg, '11-tunehelper-recurve.png'); shot(pg, '20-helper-recurve.png')
-        pg.click('[data-tn=walk]'); pg.wait_for_timeout(400)
-        chk('helper: recurve Walk back tune opens its own session', pg.evaluate("S.tune.find(t=>t.id==S._tuneId).change")=='Walk back tune' and pg.evaluate("S.tune.find(t=>t.id==S._tuneId).bt")=='r' and pg.get_attribute('#tface','data-lines')=='vh' and pg.locator('#walkeaston').count()==1 and 'Dudley' not in pg.inner_text('#app'), pg.evaluate("S.tune.find(t=>t.id==S._tuneId)"))
+        chk('helper: Walk back tune is held back on recurve', pg.locator('[data-tn=walk]').count()==0 and pg.locator('[data-tn=dudley]').count()==0 and all('Walk back' not in s for s in steps), steps)
+        open_held(pg, 'Walk back tune', bt='r')
+        chk('held Walk back still opens on recurve', pg.evaluate("S.tune.find(t=>t.id==S._tuneId).change")=='Walk back tune' and pg.evaluate("S.tune.find(t=>t.id==S._tuneId).bt")=='r' and pg.get_attribute('#tface','data-lines')=='vh' and pg.locator('#walkeaston').count()==1 and 'Dudley' not in pg.inner_text('#app'), pg.evaluate("S.tune.find(t=>t.id==S._tuneId)"))
         pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
         chk('helper: recurve toggle remembered', pg.locator('[data-thbt=r][aria-pressed=true]').count() == 1)
         # every compound tuning step opens the matching NEW session
-        for tn, change, kind in [('paper','Paper tune','paper'),('bare','Bare shaft vs fletched','bare'),('creep','Creep tune','creep'),('torque','Torque tune','torque'),('dudley','Walk back tune','dudley'),('group','Group tune','group')]:
+        chk('helper: Walk back tune is held back on compound', pg.locator('[data-tn=dudley]').count()==0 and pg.locator('[data-tn=walk]').count()==0)
+        for tn, change, kind in [('paper','Paper tune','paper'),('bare','Bare shaft vs fletched','bare'),('creep','Creep tune','creep'),('torque','Torque tune','torque'),('group','Group tune','group')]:
             pg.evaluate("S._tuneId='t-open-torque';save();nav('lab_tune')"); pg.wait_for_timeout(200)
             pg.click('[data-thbt=c]'); pg.wait_for_timeout(120)
             pg.click(f'[data-tn={tn}]'); pg.wait_for_timeout(350)

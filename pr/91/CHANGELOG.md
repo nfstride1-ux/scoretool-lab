@@ -4,6 +4,16 @@ Newest first. Each entry names the version tag shown in Settings.
 
 
 
+## v2026-11-27-1844-tunelive: Tuning goes live, Walk back held back, Just a group removed
+- Nathe, 27 Nov about 6:32–6:34pm Perth: load the tuning live, keep Group tune, remove the extra "Just a group" option, and hold Walk back tune back to fix later. Bhutan (PR #93) is not in this release.
+- **Held back (not shipped in the live helper or the new-session list):** Walk back tune. Old Walk back / Dudley sessions still open and do not crash.
+- **Removed from the new-session list:** Just a group (the extra group-tuning option). Group tune stays, on compound and recurve.
+- Live helper order — compound: Bow setup, Draw weight / spine, Cut length, Paper, Bare shaft, Creep, Torque, Group tune. Recurve: Bow setup, Draw weight / spine, Cut length, Paper (optional), Bare shaft, Group tune.
+- Cache `v2026-11-27-1844-tunelive`.
+
+### Files
+lab.js, tune.js, test/lab.js, test/tune.js, tools/tuning_test.py, index.html, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
+
 ## v2026-11-27-1705-tuneaudit: Tune helper checked against Coach and Easton, and the broken steps fixed
 - Nathe, 27 Nov about 4:54pm Perth: don't hand over steps that don't fit Coach or don't work. A full pass of the live pr/91 Tune helper (compound and recurve, phone size, sample data) found and fixed:
   - **Draw weight / spine** now opens the Arrow chooser (the makers' charts), not Calculators.

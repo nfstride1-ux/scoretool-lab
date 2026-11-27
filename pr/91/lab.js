@@ -162,7 +162,10 @@ E.lab_rounds=function(){const esc=h;app.innerHTML=`<p class="small" id="aaintro"
    - the Arrow setup table is an optional, closed section; past sessions can be deleted (with a confirm).
    Stored data: new sessions add their own fields (bt, span, paper, changes, bowSpec, arrow). Old sessions keep their face and plots
    and are shown on the crosshair at their old face's scale; nothing old is rewritten. Lingkana data is never read or written here. */
-const TUNES=['Paper tune','Bare shaft vs fletched','Torque tune','Walk back tune','Creep tune','Group tune','Just a group','Other'];
+const TUNES_ALL=['Paper tune','Bare shaft vs fletched','Torque tune','Walk back tune','Creep tune','Group tune','Just a group','Other'];
+/* Held back from live (Nathe 27 Nov): Walk back tune (to be fixed later) and the extra "Just a group" option. Group tune stays. Old sessions still open. */
+const TUNE_HOLD=new Set(['Walk back tune','Just a group']);
+const TUNES=TUNES_ALL.filter(c=>!TUNE_HOLD.has(c));
 const FACES={'40cm':20,'60cm':30,'80cm':40,'122cm':61};/* old sessions only: the face they were plotted on */
 const SPAN=20;/* new crosshair: centre to edge = 20 cm, grid every 5 cm */
 function gstats(P,rcm){if(!P.length)return null;const cx=P.reduce((a,p)=>a+p[0],0)/P.length,cy=P.reduce((a,p)=>a+p[1],0)/P.length;

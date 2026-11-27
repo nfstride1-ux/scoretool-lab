@@ -25,6 +25,9 @@ const RECURVE=[
  ['walk','Walk back tune','Shoot one vertical line at several distances and adjust the plunger.','opt','Walk back tune'],
  ['group','Group tune','Shoot long-range groups and adjust spring, tiller or brace for the tightest group.','opt','Group tune']
 ];
+/* Held back from live (Nathe 27 Nov): Walk back tune, to be fixed later. "Just a group" is removed from the new-session list. Group tune stays. Old sessions still open. */
+const HOLD=new Set(['dudley','walk']);
+function liveSteps(bt){return (bt=='r'?RECURVE:COMPOUND).filter(s=>!HOLD.has(s[0]))}
 function curBt(){
  try{const s=localStorage.getItem(KEY);if(s=='r'||s=='c')return s}catch(e){}
  const cb=typeof curBow=='function'&&curBow(),snap=cb&&window.bowSnap&&bowSnap(cb.id);
@@ -32,6 +35,7 @@ function curBt(){
 }
 function setBt(bt){try{localStorage.setItem(KEY,bt)}catch(e){}}
 function go(s){
+ if(!s||HOLD.has(s[0]))return;
  if(s[3]=='opt'){window._tunePref=s[4];window._tuneBt=curBt();nav('lab_opt')}
  else if(s[3]=='bows'){window._tuneSetup=curBt();nav('lab_mybows')}
  else if(s[3]=='chooser'){if(window.acGo&&s[4])acGo(s[4]);else nav('lab_chooser')}
@@ -39,10 +43,10 @@ function go(s){
  else if(window.acGo)acGo('cut');else nav('lab_chooser');
 }
 E.lab_tune=function(){
- const bt=curBt(),steps=bt=='r'?RECURVE:COMPOUND;
+ const bt=curBt(),steps=liveSteps(bt);
  const note=bt=='r'
-  ?'Setup first, then the recurve tuning steps in order. Creep is a form note (clicker timing), not a tuning step.'
-  :'Setup first, then the compound tuning steps in order. Each step opens the screen that already does that job.';
+  ?'Setup first, then the recurve tuning steps in order. Creep is a form note (clicker timing), not a tuning step. Walk back tune is held back for a later fix.'
+  :'Setup first, then the compound tuning steps in order. Each step opens the screen that already does that job. Walk back tune is held back for a later fix.';
  app.innerHTML=`<div class="card" id="tunehelper"><span class="kicker">Tune helper</span><h2 style="margin:2px 0 8px">Setup, then tune</h2>
  <div class="labseg" role="group" aria-label="Bow type" id="thbt"><button type="button" data-thbt="c" aria-pressed="${bt=='c'}">Compound</button><button type="button" data-thbt="r" aria-pressed="${bt=='r'}">Recurve</button></div>
  <p class="small" style="margin:0 0 8px">${note}</p>
@@ -56,7 +60,7 @@ E.lab_tune=function(){
  app.insertAdjacentElement('afterbegin',bar);
  bar.querySelector('.labback').onclick=()=>nav('tools');
  app.querySelectorAll('[data-thbt]').forEach(b=>b.onclick=()=>{setBt(b.dataset.thbt);E.lab_tune()});
- app.querySelectorAll('[data-tn]').forEach(b=>b.onclick=()=>go((bt=='r'?RECURVE:COMPOUND).find(x=>x[0]==b.dataset.tn)));
+ app.querySelectorAll('[data-tn]').forEach(b=>b.onclick=()=>go(liveSteps(bt).find(x=>x[0]==b.dataset.tn)));
  $('#tnopt').onclick=()=>{window._tunePref=null;window._tuneBt=null;window._tuneOffer=null;if(typeof S!='undefined'){S._tuneId=null;if(typeof save=='function')save()}nav('lab_opt')};
  $('#tncalc').onclick=()=>nav('lab_calc')};
 if(window.LABSEC)LABSEC.lab_tune='tools';
