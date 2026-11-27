@@ -4,6 +4,12 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 08:52 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: PR #93 CI `safety-smoke` failed on the known display-name prompt race (passed 15/15 locally). Brought across the wait-for `#nmlater` or casual button, then Not now, from the later smoke test. App code unchanged. Preview already at https://nfstride1-ux.github.io/scoretool-lab/pr/93/bhutan.html
+- Half-done: PR only, not merged. Needs Nathe's "go". Waiting on CI after this commit.
+
 ## 27 Nov 2026, 08:43 AWST — [Jarvis]
 
 - Who: Jarvis.
