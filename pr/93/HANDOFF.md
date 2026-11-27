@@ -4,6 +4,13 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 17:04 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: PR #93 Bhutan live scores. Nathe’s phone (4:51pm): taps registered but both scores stayed at 0 until the round ended (11 a side), so the buttons looked broken. The big number now updates on every tap (this set so far, including this round), with “This round” and “Set” split out, a per-round tap tally, and cancel notes shown live. Set winners are still confirmed at the end of the round, and the page says so. Same treatment for Datse (bamboo and compound), Khuru and Degor. Scoring decisions applied: a Sa-Karey or bounce-off cancel deducts 1 Kuu from one opponent Karey that round (not a wipe); if there is no opponent Karey, bounce-off scores 2 and Sa-Karey scores 1; only the single closest Daya in a round scores 1; if both sides pass the target in the same round the higher total wins the set, and a level score plays another round. Cache `v2026-11-27-1704-bhutanlive` (test app `v2026-11-27-1704-bhutanlive-test`). Main and `/test/` copies updated.
+- Tests: `python3 tools/bhutan_test.py` (includes live-total cases). safety-smoke and privacy-scan to be confirmed on this commit.
+- Half-done: PR only, not merged. Needs Nathe's "go". Lab preview pr/93 to be republished after this commit.
+
 ## 27 Nov 2026, 10:30 AWST — [Jarvis]
 
 - Who: Jarvis.

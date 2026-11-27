@@ -103,27 +103,28 @@
 
     var aD = count(aShots, 'daya');
     var bD = count(bShots, 'daya');
+    /* Only the single closest Daya in a round scores 1 Kuu. */
     var needsDayaCloser = aD > 0 && bD > 0;
     var dayaA = 0;
     var dayaB = 0;
     if (needsDayaCloser) {
       if (dayaCloser === 'a') {
-        dayaA = aD; a += dayaA;
-        notes.push(names.a + ' Daya scored ' + dayaA + ' Kuu (closer than ' + names.b + ')');
+        dayaA = 1; a += 1;
+        notes.push('The closest Daya scored 1 Kuu for ' + names.a);
       } else if (dayaCloser === 'b') {
-        dayaB = bD; b += dayaB;
-        notes.push(names.b + ' Daya scored ' + dayaB + ' Kuu (closer than ' + names.a + ')');
+        dayaB = 1; b += 1;
+        notes.push('The closest Daya scored 1 Kuu for ' + names.b);
       } else if (dayaCloser === 'equal') {
         notes.push('Dayas measured equal: neither side scores Daya');
       } else {
-        notes.push('Both sides have Daya: pick which is closer before the round is counted');
+        notes.push('More than one Daya: pick which was closest before the round is counted');
       }
     } else if (aD) {
-      dayaA = aD; a += dayaA;
-      notes.push(names.a + ' Daya scored ' + dayaA + ' Kuu (no ' + names.b + ' Daya)');
+      dayaA = 1; a += 1;
+      notes.push(names.a + ' Daya scored 1 Kuu (closest; no ' + names.b + ' Daya)');
     } else if (bD) {
-      dayaB = bD; b += dayaB;
-      notes.push(names.b + ' Daya scored ' + dayaB + ' Kuu (no ' + names.a + ' Daya)');
+      dayaB = 1; b += 1;
+      notes.push(names.b + ' Daya scored 1 Kuu (closest; no ' + names.a + ' Daya)');
     }
 
     return {
@@ -157,22 +158,22 @@
     var needsNearCloser = aN > 0 && bN > 0;
     if (needsNearCloser) {
       if (nearCloser === 'a') {
-        a += aN;
-        notes.push(names.a + ' near-miss scored ' + aN + ' (closer than ' + names.b + ', within a stick length)');
+        a += 1;
+        notes.push('The closest near-miss scored 1 for ' + names.a + ' (within a stick length)');
       } else if (nearCloser === 'b') {
-        b += bN;
-        notes.push(names.b + ' near-miss scored ' + bN + ' (closer than ' + names.a + ', within a stick length)');
+        b += 1;
+        notes.push('The closest near-miss scored 1 for ' + names.b + ' (within a stick length)');
       } else if (nearCloser === 'equal') {
         notes.push('Near-misses measured equal: neither side scores the stick-length point');
       } else {
-        notes.push('Both sides have a near-miss: pick which is closer before the round is counted');
+        notes.push('More than one near-miss: pick which was closest before the round is counted');
       }
     } else if (aN) {
-      a += aN;
-      notes.push(names.a + ' near-miss scored ' + aN + ' (within a stick length)');
+      a += 1;
+      notes.push(names.a + ' near-miss scored 1 (closest, within a stick length)');
     } else if (bN) {
-      b += bN;
-      notes.push(names.b + ' near-miss scored ' + bN + ' (within a stick length)');
+      b += 1;
+      notes.push(names.b + ' near-miss scored 1 (closest, within a stick length)');
     }
     var ready = !needsNearCloser || nearCloser === 'a' || nearCloser === 'b' || nearCloser === 'equal';
     return { a: a, b: b, notes: notes, needsDayaCloser: needsNearCloser, dayaReady: ready };
@@ -433,6 +434,49 @@
     return (roundNumber % 2 === 1) ? 'this way' : 'the other way';
   }
 
+  function labelsFor(mode) {
+    if (isDatse(mode)) return DATSE_SHOTS;
+    if (mode === 'khuru') return KHURU_SHOTS;
+    return DEGOR_SHOTS;
+  }
+
+  function tally(shots, mode) {
+    var dict = labelsFor(mode);
+    return shots.map(function (s) { return (dict[s] && dict[s].label) || s; });
+  }
+
+  /* Running scores for the open round, plus completed set totals.
+     Set/game win is only decided when the round is closed. */
+  function liveTotals(match) {
+    var set = match.sets[match.sets.length - 1];
+    var mode = match.settings.mode;
+    var cur = set && set.current ? set.current : { aShots: [], bShots: [] };
+    var nShots = cur.aShots.length + cur.bShots.length;
+    var roundOpen = !!(set && !set.winner && nShots > 0);
+    var roundA = 0, roundB = 0, notes = [], pendingCloser = false;
+    if (roundOpen) {
+      var r = scoreCurrentRound(match);
+      roundA = r.a;
+      roundB = r.b;
+      notes = r.notes.slice();
+      pendingCloser = !r.dayaReady;
+    }
+    return {
+      setA: set ? set.a : 0,
+      setB: set ? set.b : 0,
+      roundA: roundA,
+      roundB: roundB,
+      totalA: (set ? set.a : 0) + roundA,
+      totalB: (set ? set.b : 0) + roundB,
+      notes: notes,
+      pendingCloser: pendingCloser,
+      tallyA: tally(cur.aShots || [], mode),
+      tallyB: tally(cur.bShots || [], mode),
+      roundOpen: roundOpen,
+      shotsThisRound: nShots
+    };
+  }
+
   return {
     DATSE_SHOTS: DATSE_SHOTS,
     KHURU_SHOTS: KHURU_SHOTS,
@@ -443,6 +487,7 @@
     defaultSettings: defaultSettings,
     createMatch: createMatch,
     scoreCurrentRound: scoreCurrentRound,
+    liveTotals: liveTotals,
     recordShot: recordShot,
     setCloser: setCloser,
     undo: undo,

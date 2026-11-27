@@ -2,4 +2,4 @@ This folder is a pull-request preview of ScoreTool.
 It is not the live app at scoretool-demo.
 Personal scoresheets and sight-mark files are not copied here.
 
-Bhutan scoring is in Tools and on Home, and at bhutan.html (also under /test/).
+Bhutan scoring is in Tools and on Home, and at bhutan.html (also under /test/). Scores update on every tap.

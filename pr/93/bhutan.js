@@ -128,14 +128,20 @@
     applyScored(res.scored);
   }
 
+  function liveNotes(scored) {
+    if (scored && scored.round && scored.round.notes) return scored.round.notes;
+    if (scored && scored.pendingCloser && scored.preview && scored.preview.notes) return scored.preview.notes;
+    if (match) return B.liveTotals(match).notes || [];
+    return [];
+  }
+
   function applyScored(scored) {
-    if (!scored) { lastNotes = []; flash = ''; persist(); render(); return; }
-    if (scored.pendingCloser) {
-      lastNotes = scored.preview ? scored.preview.notes : [];
+    lastNotes = liveNotes(scored);
+    if (!scored || scored.pendingCloser) {
       flash = '';
-      persist(); render(); return;
+      persist(); render();
+      return;
     }
-    lastNotes = (scored.round && scored.round.notes) || [];
     if (scored.matchJustWon) {
       const n = match.settings.names[scored.matchJustWon];
       flash = n + ' win the match';
@@ -151,12 +157,8 @@
 
   function doUndo() {
     if (!match || !B.undo(match)) return;
-    lastNotes = [];
+    lastNotes = B.liveTotals(match).notes || [];
     flash = '';
-    if (B.shotsInRound(match)) {
-      const p = B.scoreCurrentRound(match);
-      lastNotes = p.notes || [];
-    }
     persist(); render();
   }
 
@@ -216,7 +218,7 @@
     <button type="button" class="seg${s.setsBestOf === 3 ? ' on' : ''}" data-sets="3">Best of 3 sets</button>
     <button type="button" class="seg${s.setsBestOf === 5 ? ' on' : ''}" data-sets="5">Best of 5 sets</button>
   </div>` : `<p class="note">${s.mode === 'khuru' ? 'Khuru: hit 2, bullseye 3, near-miss within a stick length 1. Best of 3 sets to 15.' : 'Degor: the closest stone (or stones closer than the other side’s closest) scores. Best of 3 games to 15.'}</p>`}
-  <p class="small muted">Two teams, shooting end to end. Each player has two ${unit() === 'stone' ? 'stones' : unit() === 'Khuru' ? 'Khuru' : 'arrows'} a turn. Cancels are applied at the end of the round and shown below the score.</p>
+  <p class="small muted">Two teams, shooting end to end. Each player has two ${unit() === 'stone' ? 'stones' : unit() === 'Khuru' ? 'Khuru' : 'arrows'} a turn. Scores update as you tap. Cancels are shown straight away. The set total is confirmed at the end of the round.</p>
   <button type="button" class="start" id="go">Start match</button>
 </div>
 <p class="small muted">This is a test page. It is not live on the main ScoreTool app. Scores stay on this phone only.</p>`;
@@ -274,15 +276,15 @@
 
     const closerThing = s.mode === 'degor' ? 'stone' : s.mode === 'khuru' ? 'near-miss' : 'Daya';
     const closerTitle = s.mode === 'degor'
-      ? 'Which side’s stone is closer to the peg?'
+      ? 'Which was closest?'
       : s.mode === 'khuru'
-        ? 'Which side’s near-miss is closer (within a stick length)?'
-        : 'Which side’s Daya is closer to the target?';
+        ? 'Which was closest?'
+        : 'Which was closest?';
     const closerHint = s.mode === 'degor'
-      ? 'A stone only scores if no opponent stone is closer to the peg.'
+      ? 'A stone only scores if no opponent stone is closer to the peg. Count how many of the closer side are nearer than the other side’s closest stone.'
       : s.mode === 'khuru'
-        ? 'A near-miss only scores if it is within a stick length and no opponent near-miss is closer.'
-        : 'A Daya only scores if no opponent Daya is closer to the target.';
+        ? 'Only the single closest near-miss scores 1, and only if it is within a stick length of the target.'
+        : 'Only the single closest Daya in a round scores 1.';
 
     let closerBox = '';
     if (pending) {
@@ -311,8 +313,10 @@
       `<button type="button" class="act ${style}" data-shot="${id}" ${pending || match.matchWinner || set.winner ? 'disabled' : ''}>${esc(label)}<small>${esc(sub)}</small></button>`
     ).join('');
 
-    const notes = lastNotes.length
-      ? `<div class="note cancels"><b>This round</b><ul>${lastNotes.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>`
+    const live = B.liveTotals(match);
+    const notesList = (lastNotes && lastNotes.length) ? lastNotes : live.notes;
+    const notes = notesList.length
+      ? `<div class="note cancels" id="roundnotes"><b>${live.roundOpen ? 'This round, live' : 'Last round'}</b><ul>${notesList.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>`
       : '';
 
     const hist = set.rounds.length
@@ -323,15 +327,32 @@
       ? `<div class="winner" id="wincard"><h2>${esc(names[match.matchWinner])} win</h2><p class="neon">${esc(B.modeLabel(s.mode))} · ${esc(winLine)}</p><p>Sets ${match.setWins.a}–${match.setWins.b}</p></div>`
       : (flash ? `<div class="winner"><h2>${esc(flash)}</h2></div>` : '');
 
+    function teamCard(side, on) {
+      const total = side === 'a' ? live.totalA : live.totalB;
+      const round = side === 'a' ? live.roundA : live.roundB;
+      const setPts = side === 'a' ? live.setA : live.setB;
+      const tally = side === 'a' ? live.tallyA : live.tallyB;
+      const wins = match.setWins[side];
+      const tallyLine = tally.length ? tally.join(' · ') : 'No taps yet this round';
+      return `<div class="team${on ? ' on' : ''}" id="team${side}">
+        <div class="nm">${esc(names[side])}</div>
+        <div class="sc" id="score${side}">${total}</div>
+        <div class="sub" id="split${side}">This round ${round} · ${kind} ${setPts}</div>
+        <div class="tally" id="tally${side}">${esc(tallyLine)}</div>
+        <div class="sets">${kind}s won ${wins}</div>
+      </div>`;
+    }
+
     return `${header()}
 ${winCard}
 <div class="card">
   <span class="kicker">${esc(B.modeLabel(s.mode))} · ${esc(winLine)}</span>
   <div class="board">
-    <div class="team${aOn ? ' on' : ''}"><div class="nm">${esc(names.a)}</div><div class="sc">${set.a}</div><div class="sets">${kind}s ${match.setWins.a}</div></div>
+    ${teamCard('a', aOn)}
     <div class="vs">vs</div>
-    <div class="team${bOn ? ' on' : ''}"><div class="nm">${esc(names.b)}</div><div class="sc">${set.b}</div><div class="sets">${kind}s ${match.setWins.b}</div></div>
+    ${teamCard('b', bOn)}
   </div>
+  <p class="postnote">Big number is this ${kind.toLowerCase()} so far, including this round. ${kind} winners are confirmed at the end of the round.</p>
   <p class="small muted" style="text-align:center;margin:8px 0 0">${kind} ${setNo} of ${s.setsBestOf} · first to ${need} ${kind.toLowerCase()}s · ${esc(s.teamSize)} a side</p>
 </div>
 ${closerBox}

@@ -89,10 +89,13 @@ tes('Daya is pending when both sides have one until closer is picked', () => {
   assert.strictEqual(eq.b, 0);
 });
 
-tes('Closer team scores each of its Dayas', () => {
+tes('Only the single closest Daya scores 1, even if that side has two', () => {
   const r = B.scoreDatseRound(['daya', 'daya'], ['daya'], 'a', A);
-  assert.strictEqual(r.a, 2);
+  assert.strictEqual(r.a, 1);
   assert.strictEqual(r.b, 0);
+  const alone = B.scoreDatseRound(['daya', 'daya'], ['miss', 'miss'], null, A);
+  assert.strictEqual(alone.a, 1);
+  assert.strictEqual(alone.b, 0);
 });
 
 tes('Karey plus closer Daya in the same round', () => {
@@ -213,6 +216,105 @@ tes('Compound uses the same Datse table', () => {
   B.recordShot(m, 'miss');
   const done = B.recordShot(m, 'miss');
   assert.strictEqual(done.scored.round.a, 5); // 3 + bounce 2, no opponent Karey
+});
+
+
+tes('Live totals: a Karey shows 2 on that tap, before the round ends', () => {
+  const m = B.createMatch({ mode: 'datse_bamboo', teamSize: 11, names: A, winPoints: 25, setsBestOf: 3 });
+  const res = B.recordShot(m, 'karey');
+  assert.strictEqual(res.scored, null); // round is still open (11 a side)
+  const live = B.liveTotals(m);
+  assert.strictEqual(live.totalA, 2);
+  assert.strictEqual(live.roundA, 2);
+  assert.strictEqual(live.setA, 0);
+  assert.strictEqual(live.totalB, 0);
+  assert.strictEqual(m.sets[0].a, 0);
+  assert.deepStrictEqual(live.tallyA, ['Karey']);
+  assert.strictEqual(live.roundOpen, true);
+});
+
+tes('Live totals: Sa-Karey cancel is applied and noted before the round ends', () => {
+  const m = B.createMatch({ mode: 'datse_bamboo', teamSize: 1, names: A });
+  B.recordShot(m, 'karey');
+  B.recordShot(m, 'miss');
+  B.recordShot(m, 'sa_karey');
+  const live = B.liveTotals(m);
+  assert.strictEqual(live.totalA, 1); // 2 then cancel 1
+  assert.strictEqual(live.totalB, 1);
+  assert.strictEqual(m.sets[0].a, 0);
+  assert.strictEqual(m.sets[0].b, 0);
+  assert.ok(live.notes.some(t => /cancelled 1 Kuu from Blue's Karey/.test(t)));
+  assert.deepStrictEqual(live.tallyA, ['Karey', 'Miss']);
+  assert.deepStrictEqual(live.tallyB, ['Sa-Karey']);
+});
+
+tes('Live totals: bounce-off cancel shows immediately; extra bounce does not add 2', () => {
+  const m = B.createMatch({ mode: 'datse_bamboo', teamSize: 2, names: A });
+  B.recordShot(m, 'karey'); // A player 1, arrow 1
+  B.recordShot(m, 'miss');  // A player 1, arrow 2
+  B.recordShot(m, 'bounce'); // B player 1, arrow 1 — cancel 1
+  let live = B.liveTotals(m);
+  assert.strictEqual(live.totalA, 1);
+  assert.strictEqual(live.totalB, 0);
+  assert.ok(live.notes.some(t => /bounce-off cancelled 1 Kuu/.test(t)));
+  assert.strictEqual(m.sets[0].a, 0);
+  B.recordShot(m, 'bounce'); // B player 1, arrow 2 — takes the remaining 1 Kuu; bounce itself still 0
+  live = B.liveTotals(m);
+  assert.strictEqual(live.totalA, 0);
+  assert.strictEqual(live.totalB, 0);
+  assert.strictEqual(m.sets[0].rounds.length, 0);
+});
+
+tes('Live totals: Khuru hit shows 2 on the first tap', () => {
+  const m = B.createMatch({ mode: 'khuru', teamSize: 6, names: A });
+  B.recordShot(m, 'hit');
+  const live = B.liveTotals(m);
+  assert.strictEqual(live.totalA, 2);
+  assert.strictEqual(m.sets[0].a, 0);
+  assert.deepStrictEqual(live.tallyA, ['Hit']);
+});
+
+tes('Live totals: Degor in-range stone shows 1 on the first tap', () => {
+  const m = B.createMatch({ mode: 'degor', teamSize: 6, names: A });
+  B.recordShot(m, 'in');
+  const live = B.liveTotals(m);
+  assert.strictEqual(live.totalA, 1);
+  assert.strictEqual(m.sets[0].a, 0);
+  assert.deepStrictEqual(live.tallyA, ['In range']);
+});
+
+tes('Both sides passing the target in the same round: higher total wins; a level score continues', () => {
+  const m = B.createMatch({ mode: 'datse_bamboo', teamSize: 1, names: A, winPoints: 3, setsBestOf: 1 });
+  function play(a1, a2, b1, b2) {
+    B.recordShot(m, a1); B.recordShot(m, a2); B.recordShot(m, b1); return B.recordShot(m, b2);
+  }
+  play('karey', 'miss', 'miss', 'miss'); // 2-0, not yet
+  assert.strictEqual(m.sets[0].winner, null);
+  const both = play('karey', 'miss', 'bull', 'miss'); // 4-3, both reached 3, Blue higher
+  assert.strictEqual(both.scored.round.a, 2);
+  assert.strictEqual(both.scored.round.b, 3);
+  assert.strictEqual(m.sets[0].a, 4);
+  assert.strictEqual(m.sets[0].b, 3);
+  assert.strictEqual(both.scored.setJustWon, 'a');
+
+  const t = B.createMatch({ mode: 'datse_bamboo', teamSize: 1, names: A, winPoints: 3, setsBestOf: 1 });
+  function play2(a1, a2, b1, b2) {
+    B.recordShot(t, a1); B.recordShot(t, a2); B.recordShot(t, b1); return B.recordShot(t, b2);
+  }
+  play2('karey', 'miss', 'karey', 'miss'); // 2-2
+  const level = play2('karey', 'miss', 'karey', 'miss'); // 4-4, both passed, level
+  assert.strictEqual(t.sets[0].a, 4);
+  assert.strictEqual(t.sets[0].b, 4);
+  assert.strictEqual(level.scored.setJustWon, null);
+  assert.strictEqual(t.sets[0].winner, null);
+  const win = play2('karey', 'miss', 'miss', 'miss'); // 6-4
+  assert.strictEqual(win.scored.setJustWon, 'a');
+});
+
+tes('Khuru: only the single closest near-miss scores 1', () => {
+  const r = B.scoreKhuruRound(['near', 'near'], ['miss', 'miss'], null, A);
+  assert.strictEqual(r.a, 1);
+  assert.strictEqual(r.b, 0);
 });
 
 console.log('bhutan_score: ' + n + ' cases ok');
