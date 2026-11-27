@@ -156,7 +156,7 @@ E.lab_rounds=function(){const esc=h;app.innerHTML=`<p class="small" id="aaintro"
 /* Tuning sessions (26 Nov 2026, Nathe via Grok Bot, "Yes, build the tuning preview"):
    - one bow picker and one arrow picker on a new session (the 'Use my arrow setup' tick box and the Face choice are gone);
    - Paper tune is a keypad of tear shapes laid out like the scoring pad, one tap per arrow, any number of arrows;
-   - every other tune plots on a crosshair: Torque = vertical line only, compound Walk back tune (close/far) = horizontal line only, the rest both lines;
+   - every other tune plots on a crosshair: Torque = vertical line only, Walk back tune (the Dudley close/far rules, now named Walk back) = vertical line only, the rest both lines;
    - 'What I changed' per tune: item + direction + amount + note, filtered by a Compound / Recurve switch (lists from Archery Coach,
      26 Nov ~6:13am Perth), with tear-to-fix hints on Paper tune;
    - the Arrow setup table is an optional, closed section; past sessions can be deleted (with a confirm).
@@ -210,7 +210,7 @@ const WHAT={
   ['Nocking point up/down','ud','r'],['Plunger in/out (centre shot)','io','r'],['Plunger spring tension','sp','r'],['Brace height','hl','r'],['Tiller','id','r'],['Point weight / spine / length','ar','r'],['Draw weight (limb bolts)','ud','r']],
  bare:[['Nocking point up/down','ud','b'],['Rest height','ud','c'],['Rest left/right','lr','c'],['Yoke twists (no rest move)','lr','c'],['Plunger in/out','io','r'],['Plunger spring tension','sp','r'],['Point weight','pt','b'],['Cut length','len','b'],['Draw weight','ud','b']],
  torque:[['Sight one click left/right','lr','b'],['Yoke / cam lean','lr','c'],['Grip','any','b']],
- dudley:[['Sight left/right (close, about 2.5 yd, 60 yd pin)','lr','c'],['Arrow rest left/right (far, 60 yd)','lr','c'],['Yoke twists (no rest move)','lr','c']],
+ dudley:[['Sight left/right (close, from 5 m)','lr','c'],['Arrow rest left/right (far, after you walk back)','lr','c'],['Yoke twists (no rest move)','lr','c']],
  group:[['Nocking point (small steps)','ud','b'],['Rest height','ud','b'],['Point weight','pt','b'],['Draw weight','ud','b'],['Brace height','hl','b'],['Tiller','id','r'],['Plunger spring','sp','r'],['Yoke twists','lr','c'],['Cam timing','tw','c']],
  creep:[['Cam timing (cable/string twists)','tw','c'],['Drop-away timing','et','c']],
  walk:[['Plunger in/out (centre shot)','io','r'],['Plunger spring tension','sp','r'],['Nocking point (only if the vertical spread is bad)','ud','r']]};
@@ -220,10 +220,10 @@ function eastonLink(p){const S2=window.ARROW_SRC||{},t=S2.eastonTM;return t?`<a 
 function readNote(k){const W={
  paper:`Stand about 5 ft from the paper. Errors show from 0 to 12 ft before the vanes correct them, and a bullet hole means straight flight, not accuracy.`,
  torque:`Shoot one end torqued left and one end torqued right, against the vertical line. Log what you changed, then shoot the same two ends again. If both groups sit on the line, the setup is forgiving. Confusing results usually mean you torqued too hard.`,
- dudley:`Close miss = move the sight. Far miss = move the rest and leave the sight alone. Near and far both on the line = done. If the rest would end up well off centre, use yoke twists instead.`,
+ dudley:`Keep your sight set at 5 m. Aim at the tip of the vertical line, then walk back and plot where each arrow lands — that shows how far the sight is out. Close miss = move the sight. Far miss = move the rest and leave the sight alone. Near and far both on the line = done. If the rest would end up well off centre, use yoke twists instead.`,
  group:`Keep whichever change gives the tightest group. Works best if you can group at about 60 m, and you can bias it slightly so the setup forgives some human variation.`,
  creep:`Shoot a group at full draw, then a group with a shortened draw (creep). If the crept group drops, adjust cam timing only, then test again.`,
- walk:`Arrows at every distance on one vertical line = done. Arrows spread left and right at the same distance = spring tension. Use plunger in/out and spring to get all distances on a vertical line.</p><p class="small" id="walkeaston" style="margin:6px 0 0"><b>Which way to move the plunger:</b> Easton's guide has no walk-back test, so ScoreTool does not say which way to move the plunger from a walk-back line. Easton's only in/out rule is for broadheads (right-handed archer): a group to the left acts stiff, move the rest or plunger <b>in toward the bow</b>; to the right acts weak, move it <b>out away from the bow</b>, 1/32" at a time (p. 12). For recurve tuning past the setup stage Easton says to change plunger spring tension only, not the in/out position (pp. 8 and 14).<span class="labsrc" style="display:block">${eastonLink('pp. 8, 12, 14')}</span>`};return W[k]?`<p class="small tread" style="margin:6px 0 0">${W[k]}</p>`:''}
+ walk:`Arrows at every distance on one vertical line = done. Arrows spread left and right at the same distance = spring tension. Use plunger in/out and spring to get all distances on a vertical line.</p><p class="small" id="walkeaston" style="margin:6px 0 0"><b>Which way to move the plunger:</b> Easton's guide has no walk-back test, so ScoreTool does not say which way to move the plunger from a walk-back line. Easton's only in/out rule is for broadheads (right-handed archer): a group to the left acts stiff, move the rest or plunger <b>in toward the bow</b>; to the right acts weak, move it <b>out away from the bow</b>, 1/32" at a time (p. 12). For recurve tuning past the setup stage Easton says to change plunger spring tension only, not the in/out position (pp. 8 and 14).<span class="labsrc" style="display:block">${eastonLink('pp. 8, 12, 14')}</span>`};return W[k]?`<p class="small tread"${k=='dudley'?' id="walknote"':''} style="margin:6px 0 0">${W[k]}</p>`:''}
 /* Paper tune keypad: laid out like the scoring pad, 3 x 3. Tear = where the nock end tore, from the point hole. */
 const TEAR=[['ul','Nock high-left'],['u','Nock high'],['ur','Nock high-right'],['l','Nock left'],['b','Bullet hole'],['r','Nock right'],['dl','Nock low-left'],['d','Nock low'],['dr','Nock low-right']];
 const tearName=c=>(TEAR.find(x=>x[0]==c)||[0,c])[1];
@@ -247,7 +247,7 @@ function paperBlock(T,g){const P=T.paper=T.paper||{before:[],after:[]},L=P[g]||[
  const list=L.length?`<p class="small" id="tearlist" style="margin:8px 0 0">${L.length} arrow${L.length==1?'':'s'}: ${Object.entries(cnt).map(([c,n])=>`${h(tearName(c))} ×${n}`).join(', ')}</p>`:`<p class="small muted" id="tearlist" style="margin:8px 0 0">Tap the tear shape for each arrow.</p>`;
  return{pad,list,top:top?top[0]:null,last}}
 function paperHints(T,code){if(!code)return'';return`<div class="lab-note" id="tearhint"><p style="margin:0"><b>Most common tear: ${h(tearName(code))}</b> <span class="small muted">(${T.bt=='r'?'recurve':'compound'}${T.hand=='L'?', left-handed':', right-handed'})</span></p><ul style="margin:6px 0 0;padding-left:18px">${tearHint(code,T.bt,T.hand=='L')}</ul><p class="small muted" style="margin:6px 0 0">Change one thing at a time, then shoot through the paper again. Easton: release aid archers sometimes need the opposite adjustment.</p><p class="labsrc">${eastonLink('pp. 7-8')}</p></div>`}
-function crossSvg(T,rcm,k){const s=rcm/(T.face?rcm:SPAN),lines=k=='torque'?'v':k=='dudley'?'h':'vh',grid=[];
+function crossSvg(T,rcm,k){const s=rcm/(T.face?rcm:SPAN),lines=(k=='torque'||k=='dudley')?'v':'vh',grid=[];
  const step=5/rcm;for(let i=step;i<1.05;i+=step){grid.push(`<path d="M${i} -1.05V1.05M${-i} -1.05V1.05M-1.05 ${i}H1.05M-1.05 ${-i}H1.05" stroke="var(--tgrid,#cbd5e1)" stroke-width="0.004"/>`)}
  const L=(lines.includes('v')?`<path d="M0 -1.05V1.05" stroke="#1d4ed8" stroke-width="0.016"/>`:'')+(lines.includes('h')?`<path d="M-1.05 0H1.05" stroke="#1d4ed8" stroke-width="0.016"/>`:'');
  let dots;

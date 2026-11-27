@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tuning sessions, 26 Nov 2026 (Nathe: 'Yes, build the tuning preview'). Phone size 390x844, Pro member, no network to Stripe or Supabase.
 Checks: one bow picker + one arrow picker (no 'Use my arrow setup' tick box, no Face choice), the Concept X 40 / 37 mismatch fixed,
-paper tune tear keypad (3 x 3, any number of arrows, tear->fix hints), crosshair lines per tune (torque vertical, compound Walk back tune horizontal,
+paper tune tear keypad (3 x 3, any number of arrows, tear->fix hints), crosshair lines per tune (torque vertical, compound Walk back tune vertical,
 group both; Torque has torqued-left and torqued-right groups before and after), What I changed (compound/recurve filter, direction, amount, note, no George marks), Tune helper setup-first compound/recurve order, Arrow setup collapsed by default,
 past sessions deleted only after a confirm, an old face session still opens unchanged, bare shaft verdict, Arrow chooser AC1-AC5 still there,
 Lingkana keys untouched. BASE env runs it against another copy. Screenshots go to $SHOTS."""
@@ -135,13 +135,15 @@ try:
         chk('torque: after verdict closer together or on the line', ('closer together' in v or 'sit on the line' in v) and 'George' not in v and 'Ryles' not in v, v)
         chk('torque: hint has no George', 'George' not in pg.inner_text('#app') and 'Ryles' not in pg.inner_text('#app') and 'torqued left' in pg.inner_text('#app').lower())
         pg.locator('#tface').scroll_into_view_if_needed(); shot(pg, '04-torque.png')
-        for tune, lines, fn, bt in [('Walk back tune', 'h', '05-walkback-compound.png', 'c'), ('Group tune', 'vh', '06-group.png', None)]:
+        for tune, lines, fn, bt in [('Walk back tune', 'v', '05-walkback-compound.png', 'c'), ('Group tune', 'vh', '06-group.png', None)]:
             start(pg, tune, bt=bt); chk(f'{tune} {bt or "default"}: crosshair lines={lines}', pg.get_attribute('#tface', 'data-lines') == lines)
             tap(pg, 0.6, 0.45); tap(pg, 0.55, 0.5); tap(pg, 0.62, 0.52)
             chk(f'{tune}: plotted 3', len(cur(pg)['before']) == 3)
             if tune == 'Walk back tune':
                 wi = pg.evaluate("[...document.querySelectorAll('#wi option')].map(o=>o.textContent)")
                 chk('Walk back tune (compound) list: sight, rest, yoke; no Dudley/George marks', wi[0].startswith('Sight left/right') and wi[1].startswith('Arrow rest left/right') and any('Yoke twists' in x for x in wi) and not any('George' in x or 'Ryles' in x or 'Dudley' in x for x in wi) and 'Dudley' not in pg.inner_text('#app'), wi)
+                note=(pg.inner_text('#walknote') if pg.locator('#walknote').count() else pg.inner_text('#app')).lower()
+                chk('Walk back tune (compound): 5 m sight, tip of the vertical line, same close/far rules', '5 m' in note and 'tip of the vertical line' in note and 'walk back' in note and 'close miss' in note and 'move the sight' in note and 'far miss' in note and 'move the rest' in note and 'dudley' not in note, note)
             shot(pg, fn)
         # recurve Walk back tune (old Walk-back)
         start(pg, 'Walk back tune', bt='r')
@@ -242,7 +244,7 @@ try:
                 shot(pg, '15-torque-helper.png')
             if kind=='dudley':
                 app=pg.inner_text('#app').lower()
-                chk('helper: compound Walk back tune is horizontal, no Dudley label', pg.get_attribute('#tface','data-lines')=='h' and 'walk back tune' in app and 'dudley' not in app, (pg.get_attribute('#tface','data-lines'), app[:200]))
+                chk('helper: compound Walk back tune is vertical, no Dudley label', pg.get_attribute('#tface','data-lines')=='v' and 'walk back tune' in app and 'dudley' not in app, (pg.get_attribute('#tface','data-lines'), app[:200]))
             if kind=='creep':
                 chk('helper: Creep opens Creep tune, not Group tune', 'Full draw' in pg.inner_text('#app') and 'Crept' in pg.inner_text('#app') and got[0]=='Creep tune')
                 shot(pg, '18-creep-helper.png')
@@ -256,7 +258,7 @@ try:
         # old Dudley / yoke tune session still opens, labelled Walk back tune
         pg.evaluate("""(()=>{const t={id:'t-old-dud',archer:S.profile,date:'2026-11-02',name:'',change:'Dudley / yoke tune',dist:'18m',before:[[0.1,0.0,'2026-11-02']],after:[],grp:'before',bt:'c'};S.tune.push(t);S._tuneId=t.id;save();nav('lab_opt')})()"""); pg.wait_for_timeout(400)
         app=pg.inner_text('#app').lower()
-        chk('old Dudley session opens as Walk back tune', pg.evaluate('view')=='lab_opt' and pg.get_attribute('#tface','data-lines')=='h' and 'walk back tune' in app and 'dudley' not in app, (pg.evaluate('view'), pg.get_attribute('#tface','data-lines'), app[:250]))
+        chk('old Dudley session opens as Walk back tune', pg.evaluate('view')=='lab_opt' and pg.get_attribute('#tface','data-lines')=='v' and 'walk back tune' in app and 'dudley' not in app, (pg.evaluate('view'), pg.get_attribute('#tface','data-lines'), app[:250]))
         pg.evaluate("S._tuneId=null;save();nav('lab_tune')"); pg.wait_for_timeout(300)
         pg.click('[data-thbt=r]'); pg.wait_for_timeout(200)
         chk('helper: recurve has Group tune and no Node', pg.locator('[data-tn=group]').count()==1 and pg.locator('[data-tn=node]').count()==0)

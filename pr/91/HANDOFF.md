@@ -4,6 +4,14 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 16:39 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: Branch `cursor/tuning-overhaul` (cache `v2026-11-27-1639-walkback`), PR #91. Nathe t1235u and t1236u: Walk back tune keeps the existing Dudley close/far rules (close miss = sight, far miss = rest, yoke if the rest would be off centre) and is only renamed and re-explained. Instructions now say: keep the sight at 5 m, aim at the tip of the vertical line, walk back, and plot where the arrows land (that shows how far the sight is out). The plot is a vertical line. No new verdict logic. Recurve Walk back (plunger) is unchanged. No George or Dudley labels on screen.
+- Tests: tools/tuning_test.py 96/96, safety-smoke 15/15, privacy-scan pass. Gating unchanged.
+- Half-done: PR only, not merged. Needs Nathe's "go". Preview at pr/91 to be republished with this cache (score-load overlay kept).
+- Screenshots: /workspace/st-tuning/22-walkback-compound.png (plus 05-walkback-compound.png from the test).
+
 ## 27 Nov 2026, 10:42 AWST — [Jarvis]
 
 - Who: Jarvis.

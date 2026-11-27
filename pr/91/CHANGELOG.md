@@ -4,6 +4,13 @@ Newest first. Each entry names the version tag shown in Settings.
 
 
 
+## v2026-11-27-1639-walkback: Walk back tune uses the Dudley rules, with a vertical line and 5 m sight
+- **Walk back tune** (Nathe, 27 Nov, about 4:36pm Perth: same rules as the Dudley tune, just named Walk back). Keep your sight set at 5 m, aim at the tip of the vertical line, then walk back and plot where the arrows land — that shows how far the sight is out. The close/far rules are unchanged: close miss = move the sight, far miss = move the rest and leave the sight alone, both on the line = done, yoke twists if the rest would end up well off centre. The plot is a vertical line (not a horizontal one). Old "Dudley / yoke tune" sessions still open under this name. Recurve Walk back tune is unchanged (plunger walk-back).
+- Cache version is `v2026-11-27-1639-walkback`. Not merged until go-live.
+
+### Files
+lab.js, tune.js, test/lab.js, test/tune.js, tools/tuning_test.py, index.html, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
+
 ## v2026-11-27-1042-tunefix: Bare shaft compound hints, Creep tune, Group tune, no Node step
 - **Bare shaft next steps on compound no longer mention a cushion plunger** (Nathe, 27 Nov, about 10:35am Perth). Compound suggestions are rest left/right, yoke or cam, point weight, draw weight and cut length. Recurve still has the plunger row.
 - **Node / nocking point is removed** from Tune helper on both Compound and Recurve. Height is still handled inside Bare shaft.

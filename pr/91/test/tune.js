@@ -13,7 +13,7 @@ const COMPOUND=[
  ['bare','Bare shaft','Compare bare and fletched arrows left and right, and fine-tune the rest, yoke or spine.','opt','Bare shaft vs fletched'],
  ['creep','Creep','Shoot a group at full draw and a group with a shortened draw. If the crept group drops, adjust cam timing only.','opt','Creep tune'],
  ['torque','Torque','Shoot one end torqued left and one end torqued right against the vertical line, then adjust the sight.','opt','Torque tune'],
- ['dudley','Walk back tune','Use the sight for left/right up close and the rest for left/right at long range.','opt','Walk back tune'],
+ ['dudley','Walk back tune','Keep the 5 m sight setting, aim at the tip of the vertical line, then walk back. Where the arrows land shows how far the sight is out. Close miss = sight, far miss = rest.','opt','Walk back tune'],
  ['group','Group tune','Shoot long-range groups and keep the change that tightens the group.','opt','Group tune']
 ];
 const RECURVE=[
