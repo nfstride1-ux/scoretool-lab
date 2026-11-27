@@ -10,11 +10,11 @@ const COMPOUND=[
  ['spine','Draw weight / spine','Pick the spine from the maker\'s chart at your final draw weight, length and point weight.','calc',null],
  ['cut','Cut length','Cut to the shortest safe length, about 1 in past the rest at full draw.','cut',null],
  ['paper','Paper','Shoot through paper at about 4-6 ft and fix gross tears.','opt','Paper tune'],
- ['node','Node / nocking point','Get bare and fletched arrows to the same height.','opt','Bare shaft vs fletched'],
  ['bare','Bare shaft','Compare bare and fletched arrows left and right, and fine-tune the rest, yoke or spine.','opt','Bare shaft vs fletched'],
- ['creep','Creep','Check whether a shortened draw drops the group, and adjust timing if needed.','opt','Group tune'],
+ ['creep','Creep','Shoot a group at full draw and a group with a shortened draw. If the crept group drops, adjust cam timing only.','opt','Creep tune'],
  ['torque','Torque','Shoot one end torqued left and one end torqued right against the vertical line, then adjust the sight.','opt','Torque tune'],
- ['dudley','Walk back tune','Use the sight for left/right up close and the rest for left/right at long range.','opt','Walk back tune']
+ ['dudley','Walk back tune','Use the sight for left/right up close and the rest for left/right at long range.','opt','Walk back tune'],
+ ['group','Group tune','Shoot long-range groups and keep the change that tightens the group.','opt','Group tune']
 ];
 const RECURVE=[
  ['setup','Bow setup','Set brace height, tiller, limb-bolt weight, a starting nocking point, and centre shot with the plunger.','bows',null],
@@ -22,9 +22,8 @@ const RECURVE=[
  ['cut','Cut length','Leave about 1 in past the plunger at full draw, or cut to suit the clicker.','cut',null],
  ['paper','Paper (optional)','A quick flight check at about 4-6 ft, before bare shaft. Less reliable with fingers than bare shaft.','opt','Paper tune'],
  ['bare','Bare shaft','The main recurve tune: height first, then left and right with point weight, plunger spring or limb bolts.','opt','Bare shaft vs fletched'],
- ['node','Node / nocking point','Fine-tune until bare and fletched arrows land at the same height.','opt','Bare shaft vs fletched'],
  ['walk','Walk back tune','Shoot one vertical line at several distances and adjust the plunger.','opt','Walk back tune'],
- ['group','Plunger spring / group tune','Shoot long-range groups and adjust spring, tiller or brace for the tightest group.','opt','Group tune']
+ ['group','Group tune','Shoot long-range groups and adjust spring, tiller or brace for the tightest group.','opt','Group tune']
 ];
 function curBt(){
  try{const s=localStorage.getItem(KEY);if(s=='r'||s=='c')return s}catch(e){}

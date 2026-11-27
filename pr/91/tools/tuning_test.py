@@ -72,7 +72,7 @@ try:
         chk('bow line is Concept X 40, 327 fps (mismatch fixed)', 'Concept X 40' in bl and '327' in bl and '37' not in bl.replace('7.25', ''), bl)
         chk('bow picker label has no Concept X 37', 'Concept X 37' not in pg.inner_text('#t_mybow'))
         tunes = pg.evaluate("[...document.querySelectorAll('#tc option')].map(o=>o.value)")
-        chk('tune list', tunes[:6] == ['Paper tune', 'Bare shaft vs fletched', 'Torque tune', 'Walk back tune', 'Group tune', 'Just a group'], tunes)
+        chk('tune list', tunes[:6] == ['Paper tune', 'Bare shaft vs fletched', 'Torque tune', 'Walk back tune', 'Creep tune', 'Group tune'], tunes)
         chk('390px no sideways scroll (form)', pg.evaluate("document.documentElement.scrollWidth") <= 392)
         shot(pg, '01-new-session.png')
         # paper tune
@@ -156,7 +156,22 @@ try:
         v = pg.inner_text('#bareverdict')
         chk('bare: plain verdict + next step', 'Verdict:' in v and 'weak' in v and 'Usual next step' in v, v)
         chk('bare: crosshair both lines', pg.get_attribute('#tface', 'data-lines') == 'vh')
-        shot(pg, '08-bare-verdict.png')
+        nc = pg.inner_text('#nextcard') if pg.locator('#nextcard').count() else ''
+        chk('bare compound: next step has no cushion plunger', 'plunger' not in v.lower() and 'cushion' not in nc.lower() and 'plunger' not in nc.lower() and ('Rest left/right' in nc or 'yoke' in nc.lower()), (v, nc[:400]))
+        shot(pg, '08-bare-verdict.png'); shot(pg, '16-bare-compound-next.png')
+        # recurve still gets the plunger row
+        start(pg, 'Bare shaft vs fletched', bt='r')
+        for fx, fy in [(0.5, 0.5), (0.52, 0.49), (0.49, 0.52)]: tap(pg, fx, fy)
+        pg.click('[data-g=after]'); pg.wait_for_timeout(200)
+        for fx, fy in [(0.75, 0.5), (0.77, 0.52)]: tap(pg, fx, fy)
+        vr = pg.inner_text('#bareverdict'); ncr = pg.inner_text('#nextcard') if pg.locator('#nextcard').count() else ''
+        chk('bare recurve: next step still has cushion plunger', 'plunger' in (vr+' '+ncr).lower() and 'Cushion plunger' in ncr, ncr[:300])
+        # Creep tune is its own session (timing only), not Group tune
+        start(pg, 'Creep tune')
+        chk('creep: own session, Full draw / Crept', pg.evaluate("(S.tune.find(t=>t.id==S._tuneId)||{}).change")=='Creep tune' and 'Full draw' in pg.inner_text('#app') and 'Crept' in pg.inner_text('#app') and pg.locator('#tface').count()==1)
+        wi = pg.evaluate("[...document.querySelectorAll('#wi option')].map(o=>o.textContent)")
+        chk('creep: What I changed is timing only', any('Cam timing' in x for x in wi) and any('timing' in x.lower() for x in wi) and not any('Plunger' in x or 'Point weight' in x or 'Brace' in x or 'Rest height' in x for x in wi) and 'George' not in ''.join(wi), wi)
+        shot(pg, '18-creep.png')
         # old face session opens and is unchanged
         pg.evaluate("S._tuneId='t1700000000000';save();nav('lab_opt')"); pg.wait_for_timeout(400)
         chk('old face session opens on the crosshair', pg.locator('#tface').count() == 1 and '40cm' in pg.inner_text('#app'))
@@ -183,9 +198,10 @@ try:
         th = pg.inner_text('#tunehelper')
         chk('helper: compound default', pg.locator('[data-thbt=c][aria-pressed=true]').count() == 1)
         steps = pg.evaluate("[...document.querySelectorAll('#thsteps b')].map(b=>b.textContent)")
-        chk('helper: compound order', steps == ['1. Bow setup', '2. Draw weight / spine', '3. Cut length', '4. Paper', '5. Node / nocking point', '6. Bare shaft', '7. Creep', '8. Torque', '9. Walk back tune'], steps)
+        chk('helper: compound order', steps == ['1. Bow setup', '2. Draw weight / spine', '3. Cut length', '4. Paper', '5. Bare shaft', '6. Creep', '7. Torque', '8. Walk back tune', '9. Group tune'], steps)
         chk('helper: compound has no George', 'George' not in th and 'Ryles' not in th)
-        pg.locator('#tunehelper').scroll_into_view_if_needed(); shot(pg, '10-tunehelper-compound.png')
+        chk('helper: no Node / nocking point step', pg.locator('[data-tn=node]').count()==0 and all('Node' not in s for s in steps), steps)
+        pg.locator('#tunehelper').scroll_into_view_if_needed(); shot(pg, '10-tunehelper-compound.png'); shot(pg, '17-helper-compound.png')
         pg.evaluate("""(()=>{const t={id:'t-open-torque',archer:S.profile,date:'2026-11-26',name:'Open torque',change:'Torque tune',dist:'18m',before:[[0.1,0.1,'2026-11-26'],[0.12,0.0,'2026-11-26'],[0.08,0.05,'2026-11-26'],[0.11,-0.02,'2026-11-26'],[0.09,0.03,'2026-11-26'],[0.13,0.01,'2026-11-26'],[0.07,0.04,'2026-11-26']],after:[],grp:'before',bt:'c'};S.tune=S.tune||[];S.tune.push(t);S._tuneId=t.id;save()})()""")
         pg.click('[data-tn=paper]'); pg.wait_for_timeout(400)
         opened=pg.evaluate("(()=>{const t=(S.tune||[]).find(x=>x.id==S._tuneId)||{};return {view,id:S._tuneId,change:t.change,pad:!!document.getElementById('tpad')}})()")
@@ -203,21 +219,21 @@ try:
         pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
         pg.click('[data-thbt=r]'); pg.wait_for_timeout(300)
         steps = pg.evaluate("[...document.querySelectorAll('#thsteps b')].map(b=>b.textContent)")
-        chk('helper: recurve order', steps == ['1. Bow setup', '2. Draw weight / spine', '3. Cut length', '4. Paper (optional)', '5. Bare shaft', '6. Node / nocking point', '7. Walk back tune', '8. Plunger spring / group tune'], steps)
+        chk('helper: recurve order', steps == ['1. Bow setup', '2. Draw weight / spine', '3. Cut length', '4. Paper (optional)', '5. Bare shaft', '6. Walk back tune', '7. Group tune'], steps)
         th = pg.inner_text('#tunehelper')
         chk('helper: recurve steps omit Torque; no Dudley label; creep is a form note', all('Torque' not in s and 'Dudley' not in s for s in steps) and 'form note' in th.lower() and 'George' not in th and 'Ryles' not in th and 'Dudley' not in th, steps)
-        pg.locator('#tunehelper').scroll_into_view_if_needed(); shot(pg, '11-tunehelper-recurve.png')
+        pg.locator('#tunehelper').scroll_into_view_if_needed(); shot(pg, '11-tunehelper-recurve.png'); shot(pg, '20-helper-recurve.png')
         pg.click('[data-tn=walk]'); pg.wait_for_timeout(400)
         chk('helper: recurve Walk back tune opens its own session', pg.evaluate("S.tune.find(t=>t.id==S._tuneId).change")=='Walk back tune' and pg.evaluate("S.tune.find(t=>t.id==S._tuneId).bt")=='r' and pg.get_attribute('#tface','data-lines')=='vh' and pg.locator('#walkeaston').count()==1 and 'Dudley' not in pg.inner_text('#app'), pg.evaluate("S.tune.find(t=>t.id==S._tuneId)"))
         pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
         chk('helper: recurve toggle remembered', pg.locator('[data-thbt=r][aria-pressed=true]').count() == 1)
         # every compound tuning step opens the matching NEW session
-        for tn, change, kind in [('paper','Paper tune','paper'),('node','Bare shaft vs fletched','bare'),('bare','Bare shaft vs fletched','bare'),('creep','Group tune','group'),('torque','Torque tune','torque'),('dudley','Walk back tune','dudley')]:
+        for tn, change, kind in [('paper','Paper tune','paper'),('bare','Bare shaft vs fletched','bare'),('creep','Creep tune','creep'),('torque','Torque tune','torque'),('dudley','Walk back tune','dudley'),('group','Group tune','group')]:
             pg.evaluate("S._tuneId='t-open-torque';save();nav('lab_tune')"); pg.wait_for_timeout(200)
             pg.click('[data-thbt=c]'); pg.wait_for_timeout(120)
             pg.click(f'[data-tn={tn}]'); pg.wait_for_timeout(350)
             got = pg.evaluate("(()=>{const t=(S.tune||[]).find(x=>x.id==S._tuneId)||{};return [t.change,t.id,t.bt||'']})()")
-            got_kind = 'walk' if got[0]=='Walk back tune' and got[2]=='r' else 'dudley' if got[0]=='Walk back tune' else {'Paper tune':'paper','Bare shaft vs fletched':'bare','Torque tune':'torque','Group tune':'group'}.get(got[0])
+            got_kind = 'walk' if got[0]=='Walk back tune' and got[2]=='r' else 'dudley' if got[0]=='Walk back tune' else {'Paper tune':'paper','Bare shaft vs fletched':'bare','Torque tune':'torque','Creep tune':'creep','Group tune':'group'}.get(got[0])
             chk(f'helper: {tn} starts a new {change} (not the open Torque)', got[0]==change and got[1]!='t-open-torque' and got_kind==kind, got+[got_kind])
             if kind=='paper': chk('helper: paper shows keypad', pg.locator('#tpad').count()==1)
             if kind=='bare': chk(f'helper: {tn} shows Fletched/Bare', 'Fletched' in pg.inner_text('#app') and 'Bare' in pg.inner_text('#app') and pg.locator('#tface').count()==1)
@@ -227,6 +243,12 @@ try:
             if kind=='dudley':
                 app=pg.inner_text('#app').lower()
                 chk('helper: compound Walk back tune is horizontal, no Dudley label', pg.get_attribute('#tface','data-lines')=='h' and 'walk back tune' in app and 'dudley' not in app, (pg.get_attribute('#tface','data-lines'), app[:200]))
+            if kind=='creep':
+                chk('helper: Creep opens Creep tune, not Group tune', 'Full draw' in pg.inner_text('#app') and 'Crept' in pg.inner_text('#app') and got[0]=='Creep tune')
+                shot(pg, '18-creep-helper.png')
+            if kind=='group':
+                chk('helper: Group tune opens on compound', got[0]=='Group tune' and pg.locator('#tface').count()==1 and pg.get_attribute('#tface','data-lines')=='vh')
+                shot(pg, '19-group-compound.png')
         # old torque session with only before/after points gets the two-way UI
         pg.evaluate("""(()=>{const t={id:'t-old-tq',archer:S.profile,date:'2026-11-01',name:'Legacy torque',change:'Torque tune',dist:'18m',before:[[0.1,0.0,'2026-11-01'],[0.12,0.02,'2026-11-01']],after:[[0.0,0.0,'2026-11-01']],grp:'before',bt:'c'};S.tune.push(t);S._tuneId=t.id;save();nav('lab_opt')})()"""); pg.wait_for_timeout(400)
         chk('old torque: two-way left/right UI', pg.locator('#tsides').count()==1 and pg.locator('[data-side=R]').count()==1 and 'Torqued left' in pg.inner_text('#app'))
@@ -235,6 +257,12 @@ try:
         pg.evaluate("""(()=>{const t={id:'t-old-dud',archer:S.profile,date:'2026-11-02',name:'',change:'Dudley / yoke tune',dist:'18m',before:[[0.1,0.0,'2026-11-02']],after:[],grp:'before',bt:'c'};S.tune.push(t);S._tuneId=t.id;save();nav('lab_opt')})()"""); pg.wait_for_timeout(400)
         app=pg.inner_text('#app').lower()
         chk('old Dudley session opens as Walk back tune', pg.evaluate('view')=='lab_opt' and pg.get_attribute('#tface','data-lines')=='h' and 'walk back tune' in app and 'dudley' not in app, (pg.evaluate('view'), pg.get_attribute('#tface','data-lines'), app[:250]))
+        pg.evaluate("S._tuneId=null;save();nav('lab_tune')"); pg.wait_for_timeout(300)
+        pg.click('[data-thbt=r]'); pg.wait_for_timeout(200)
+        chk('helper: recurve has Group tune and no Node', pg.locator('[data-tn=group]').count()==1 and pg.locator('[data-tn=node]').count()==0)
+        pg.click('[data-tn=group]'); pg.wait_for_timeout(400)
+        chk('helper: recurve Group tune opens its session', pg.evaluate("(S.tune.find(t=>t.id==S._tuneId)||{}).change")=='Group tune' and pg.evaluate("(S.tune.find(t=>t.id==S._tuneId)||{}).bt")=='r' and pg.locator('#tface').count()==1)
+        shot(pg, '21-group-recurve.png')
         pg.evaluate("nav('lab_tune')"); pg.wait_for_timeout(300)
         pg.click('[data-thbt=c]'); pg.wait_for_timeout(200)
         pg.click('[data-tn=setup]'); pg.wait_for_timeout(400)

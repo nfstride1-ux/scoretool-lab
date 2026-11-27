@@ -4,6 +4,16 @@ Newest first. Each entry names the version tag shown in Settings.
 
 
 
+## v2026-11-27-1042-tunefix: Bare shaft compound hints, Creep tune, Group tune, no Node step
+- **Bare shaft next steps on compound no longer mention a cushion plunger** (Nathe, 27 Nov, about 10:35am Perth). Compound suggestions are rest left/right, yoke or cam, point weight, draw weight and cut length. Recurve still has the plunger row.
+- **Node / nocking point is removed** from Tune helper on both Compound and Recurve. Height is still handled inside Bare shaft.
+- **Creep tune is its own session**, not Group tune. It compares a Full draw group with a Crept (shortened draw) group. What I changed is timing only (cam timing, or drop-away timing). Recurve still treats creep as a form note, not a step.
+- **Group tune is a step on both Compound and Recurve**, and opens a Group tune session.
+- Cache version is `v2026-11-27-1042-tunefix`. Not merged until go-live.
+
+### Files
+lab.js, tune.js, test/lab.js, test/tune.js, tools/tuning_test.py, index.html, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
+
 ## v2026-11-26-1755-tuneopen: Tune helper opens the right test; Dudley renamed Walk back tune
 - **Tune helper opens the matching new session** (Nathe, 26 Nov, about 5:46pm Perth: clicking Paper, or any other tuning step, was opening an already-open Torque session). Each step now starts a new session of that type (Paper keypad, Bare shaft Fletched/Bare, Torque left/right, Walk back tune, Group tune). If you already have an unfinished session of the same type, that is offered, but the screen you land on is the new one. An unrelated open session is never reopened.
 - **Old Torque sessions** that only had Before/After points now show the two-way Torqued left / Torqued right controls. Existing points are kept as the left groups.

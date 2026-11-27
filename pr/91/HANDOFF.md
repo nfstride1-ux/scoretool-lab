@@ -4,6 +4,14 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 10:42 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: Branch `cursor/tuning-overhaul` (cache `v2026-11-27-1042-tunefix`), PR #91. Nathe t1234u: (1) Paper left as-is. (2) Bare shaft "next step" on compound no longer mentions a cushion plunger (rest / yoke or cam instead; recurve still has the plunger row). (3) Node / nocking point removed from Tune helper on Compound and Recurve. (4) Creep now opens a Creep tune session (Full draw vs Crept; What I changed is timing only), not Group tune. (5) Group tune is a helper step on both bow types and opens its own session.
+- Tests: tools/tuning_test.py 95/95, tools/tier_gate_test.py 195/195, safety-smoke 15/15, privacy-scan pass. No George references.
+- Half-done: PR only, not merged. Needs Nathe's "go". Preview at pr/91 to be republished with this cache (score-load overlay kept).
+- Screenshots: /workspace/st-tuning/16-bare-compound-next.png, 17-helper-compound.png, 18-creep.png, 18-creep-helper.png, 19-group-compound.png, 20-helper-recurve.png, 21-group-recurve.png.
+
 ## 26 Nov 2026, 17:55 AWST — [Jarvis]
 
 - Who: Jarvis.

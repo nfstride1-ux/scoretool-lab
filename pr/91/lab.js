@@ -162,7 +162,7 @@ E.lab_rounds=function(){const esc=h;app.innerHTML=`<p class="small" id="aaintro"
    - the Arrow setup table is an optional, closed section; past sessions can be deleted (with a confirm).
    Stored data: new sessions add their own fields (bt, span, paper, changes, bowSpec, arrow). Old sessions keep their face and plots
    and are shown on the crosshair at their old face's scale; nothing old is rewritten. Lingkana data is never read or written here. */
-const TUNES=['Paper tune','Bare shaft vs fletched','Torque tune','Walk back tune','Group tune','Just a group','Other'];
+const TUNES=['Paper tune','Bare shaft vs fletched','Torque tune','Walk back tune','Creep tune','Group tune','Just a group','Other'];
 const FACES={'40cm':20,'60cm':30,'80cm':40,'122cm':61};/* old sessions only: the face they were plotted on */
 const SPAN=20;/* new crosshair: centre to edge = 20 cm, grid every 5 cm */
 function gstats(P,rcm){if(!P.length)return null;const cx=P.reduce((a,p)=>a+p[0],0)/P.length,cy=P.reduce((a,p)=>a+p[1],0)/P.length;
@@ -170,7 +170,7 @@ function gstats(P,rcm){if(!P.length)return null;const cx=P.reduce((a,p)=>a+p[0],
  return{n:P.length,cx:cx*rcm,cy:cy*rcm,mr:mr*rcm,es:es*rcm}}
 const cm=v=>(Math.round(v*10)/10).toFixed(1);
 const dir=(x,y)=>`${cm(Math.abs(x))} cm ${x>=0?'right':'left'}, ${cm(Math.abs(y))} cm ${y>=0?'low':'high'}`;
-function tKind(T){if(T.face)return'legacy';const c=T.change;if(c=='Walk back tune')return(T.bt&&T.bt!='c')?'walk':'dudley';return({'Paper tune':'paper','Bare shaft vs fletched':'bare','Torque tune':'torque','Dudley / yoke tune':'dudley','Group tune':'group','Group test':'group','Walk-back':'walk'})[c]||'group'}
+function tKind(T){if(T.face)return'legacy';const c=T.change;if(c=='Walk back tune')return(T.bt&&T.bt!='c')?'walk':'dudley';return({'Paper tune':'paper','Bare shaft vs fletched':'bare','Torque tune':'torque','Dudley / yoke tune':'dudley','Creep tune':'creep','Group tune':'group','Group test':'group','Walk-back':'walk'})[c]||'group'}
 function tName(T){const c=typeof T=='string'?T:(T&&T.change)||'';return(c=='Dudley / yoke tune'||c=='Walk-back'||c=='Walk back tune')?'Walk back tune':c}
 const tScale=T=>T.face?(FACES[T.face]||20):(T.span||SPAN);
 function torqueInit(){return{before:{L:[],R:[]},after:{L:[],R:[]}}}
@@ -212,6 +212,7 @@ const WHAT={
  torque:[['Sight one click left/right','lr','b'],['Yoke / cam lean','lr','c'],['Grip','any','b']],
  dudley:[['Sight left/right (close, about 2.5 yd, 60 yd pin)','lr','c'],['Arrow rest left/right (far, 60 yd)','lr','c'],['Yoke twists (no rest move)','lr','c']],
  group:[['Nocking point (small steps)','ud','b'],['Rest height','ud','b'],['Point weight','pt','b'],['Draw weight','ud','b'],['Brace height','hl','b'],['Tiller','id','r'],['Plunger spring','sp','r'],['Yoke twists','lr','c'],['Cam timing','tw','c']],
+ creep:[['Cam timing (cable/string twists)','tw','c'],['Drop-away timing','et','c']],
  walk:[['Plunger in/out (centre shot)','io','r'],['Plunger spring tension','sp','r'],['Nocking point (only if the vertical spread is bad)','ud','r']]};
 const tWhat=k=>(WHAT[k]||WHAT.group).concat([['Other','any','b']]);
 function eastonLink(p){const S2=window.ARROW_SRC||{},t=S2.eastonTM;return t?`<a href="${t[1]}" target="_blank" rel="noopener">Easton Arrow Tuning and Maintenance Guide</a>${p?', '+p:''}`:`Easton Arrow Tuning and Maintenance Guide${p?', '+p:''}`}
@@ -221,6 +222,7 @@ function readNote(k){const W={
  torque:`Shoot one end torqued left and one end torqued right, against the vertical line. Log what you changed, then shoot the same two ends again. If both groups sit on the line, the setup is forgiving. Confusing results usually mean you torqued too hard.`,
  dudley:`Close miss = move the sight. Far miss = move the rest and leave the sight alone. Near and far both on the line = done. If the rest would end up well off centre, use yoke twists instead.`,
  group:`Keep whichever change gives the tightest group. Works best if you can group at about 60 m, and you can bias it slightly so the setup forgives some human variation.`,
+ creep:`Shoot a group at full draw, then a group with a shortened draw (creep). If the crept group drops, adjust cam timing only, then test again.`,
  walk:`Arrows at every distance on one vertical line = done. Arrows spread left and right at the same distance = spring tension. Use plunger in/out and spring to get all distances on a vertical line.</p><p class="small" id="walkeaston" style="margin:6px 0 0"><b>Which way to move the plunger:</b> Easton's guide has no walk-back test, so ScoreTool does not say which way to move the plunger from a walk-back line. Easton's only in/out rule is for broadheads (right-handed archer): a group to the left acts stiff, move the rest or plunger <b>in toward the bow</b>; to the right acts weak, move it <b>out away from the bow</b>, 1/32" at a time (p. 12). For recurve tuning past the setup stage Easton says to change plunger spring tension only, not the in/out position (pp. 8 and 14).<span class="labsrc" style="display:block">${eastonLink('pp. 8, 12, 14')}</span>`};return W[k]?`<p class="small tread" style="margin:6px 0 0">${W[k]}</p>`:''}
 /* Paper tune keypad: laid out like the scoring pad, 3 x 3. Tear = where the nock end tore, from the point hole. */
 const TEAR=[['ul','Nock high-left'],['u','Nock high'],['ur','Nock high-right'],['l','Nock left'],['b','Bullet hole'],['r','Nock right'],['dl','Nock low-left'],['d','Nock low'],['dr','Nock low-right']];
@@ -307,9 +309,9 @@ E.lab_opt=function(){S.tune=S.tune||[];
   app.querySelectorAll('[data-tdel]').forEach(x=>x.onclick=e=>{e.stopPropagation();const t=S.tune.find(y=>y.id==x.dataset.tdel&&y.archer==S.profile);if(!t)return;
    if(confirm(`Delete "${t.name||tName(t)}" from ${t.date}? This can't be undone.`)){S.tune=S.tune.filter(y=>y!==t);save();render()}});return}
  if(torqueEnsure(T))save();
- const k=tKind(T),rcm=tScale(T),g=T.grp||'before',paper=k=='paper',one=T.change=='Just a group',bare=k=='bare',tq=torqueOn(T),side=T.side||'L';
+ const k=tKind(T),rcm=tScale(T),g=T.grp||'before',paper=k=='paper',one=T.change=='Just a group',bare=k=='bare',creep=k=='creep',tq=torqueOn(T),side=T.side||'L';
  const B=paper||tq?null:gstats(T.before,rcm),A=paper||tq?null:gstats(T.after,rcm);
- const LB=bare?'Fletched':'Before',LA=bare?'Bare':'After';
+ const LB=bare?'Fletched':creep?'Full draw':'Before',LA=bare?'Bare':creep?'Crept':'After';
  const line=(nm,s)=>s?`<tr><th>${nm}</th><td>${s.n}</td><td>${cm(s.mr*2)} cm</td><td>${cm(s.es)} cm</td><td>${dir(s.cx,s.cy)}</td></tr>`:`<tr><th>${nm}</th><td colspan="4" class="muted">No arrows yet</td></tr>`;
  let cmp='';if(tq)cmp=torqueVerdict(T,rcm);else if(bare)cmp=bareVerdict(T,B,A);else if(!paper&&B&&A&&B.n>1&&A.n>1){const d=Math.round((1-A.mr/B.mr)*100);cmp=`<p class="lab-note">After the change the group is <b>${Math.abs(d)}% ${d>=0?'tighter':'wider'}</b> (average spread ${cm(B.mr*2)} → ${cm(A.mr*2)} cm) and its centre moved ${dir(A.cx-B.cx,A.cy-B.cy)}.</p>`}
  const pp=paper?paperBlock(T,g):null;
@@ -389,7 +391,7 @@ function bareVerdict(T,B,A){if(!B||!A||B.n<3||A.n<2)return`<p class="lab-note" i
  if(!hd&&side!='ok')parts.push(`bare shafts ${cm(Math.abs(dx))} cm ${dx>0?'right':'left'} of the fletched group; choose the bow hand to see weak or stiff`);
  else if(side=='ok')parts.push('side to side the bare shafts are with the fletched group, so spine looks right');
  else{parts.push(`bare shafts ${cm(Math.abs(dx))} cm ${dx>0?'right':'left'} of the fletched group: the arrow is acting <b>${side}</b>${lh?' (left-handed, so the right-handed reading is mirrored)':''}`);
-  next.push(side=='weak'?'weak: a lighter point, more plunger tension, slightly less draw weight, or a shorter arrow if it still clears the rest':'stiff: a heavier point, less plunger tension, slightly more draw weight, or a weaker spine (do not cut it shorter)')}
+  next.push(side=='weak'?(comp?'weak: a lighter point, rest left/right or yoke/cam, slightly less draw weight, or a shorter arrow if it still clears the rest':'weak: a lighter point, more plunger tension, slightly less draw weight, or a shorter arrow if it still clears the rest'):(comp?'stiff: a heavier point, rest left/right or yoke/cam, slightly more draw weight, or a weaker spine (do not cut it shorter)':'stiff: a heavier point, less plunger tension, slightly more draw weight, or a weaker spine (do not cut it shorter)'))}
  if(vert){parts.push(`bare shafts ${cm(Math.abs(dy))} cm ${vert} of the fletched group: check the nocking point${comp?'':' or tiller'}`);
   next.push(vert=='high'?`high: move the nocking point up a little at a time${comp?'':', then look at tiller if that does not fix it'}`:`low: move the nocking point down a little at a time${comp?'':', then look at tiller if that does not fix it'}`)}
  const ok=side=='ok'&&!vert&&hd;
@@ -400,6 +402,7 @@ function bareCard(T,B,A){const S2=window.ARROW_SRC||{},tm=S2.eastonTM?`<a href="
  const head=`<div class="card" id="barecard"><span class="kicker">Bare shaft reading</span>`,tail=`<p class="small muted" style="margin:8px 0 0">Easton's Bare Shaft Planing Test: three fletched arrows, then two bare shafts aimed the same, at 15 to 20 yards or metres. It is written for finger release.</p><p class="labsrc">${tm}</p></div>`;
  if(!B||!A||B.n<3||A.n<2)return head+`<p style="margin:2px 0 0">Plot at least 3 fletched (●) and 2 bare (■) arrows to see the reading.</p>`+tail;
  const dx=A.cx-B.cx,dy=A.cy-B.cy,sp=B.mr,out=[];
+ const comp=T.bt?T.bt=='c':((T.arrow&&T.arrow.bow=='compound')||/compound/i.test(T.bowName||''));
  if(Math.abs(dy)>sp)out.push(`<p>Bare shafts are <b>${cm(Math.abs(dy))} cm ${dy<0?'higher':'lower'}</b> than the fletched group. Easton: ${dy<0?'move the nocking point <b>up</b>':'move the nocking point <b>down</b>'} until they hit at the same height${dy>0?' (slightly lower is sometimes wanted)':''}. On a recurve or barebow, if moving the nocking point does not bring them level, tiller can also move bare shafts up or down (general tuning guidance, not from Easton's guide).</p>`);
  if(T.hand!='R'&&T.hand!='L'){out.push(`<p>Side to side, bare shafts are ${cm(Math.abs(dx))} cm ${dx>=0?'right':'left'} of the fletched group. Choose the bow hand above to see the weak or stiff reading.</p>`);return head+out.join('')+tail}
  if(Math.abs(dx)<=sp){out.push(`<p>Side to side, the bare shafts are within the fletched group's average spread. Easton: "Your equipment is basically tuned when the bare shafts and fletched shafts impact at the same or very near the same location."</p>`);return head+out.join('')+tail}
@@ -410,7 +413,9 @@ function bareCard(T,B,A){const S2=window.ARROW_SRC||{},tm=S2.eastonTM?`<a href="
  return head+out.join('')+`</div><div class="card" id="nextcard"><span class="kicker">Next step to try</span><p class="small" style="margin:2px 0 8px">Starting points from Easton's guide. Change one thing at a time, then shoot the test again.</p>
  <table class="labtbl"><tbody>
  <tr><th>${weak?'Lighter':'Heavier'} point or insert</th><td>${weak?'−':'+'}25 gr is a first step to try (Easton's chart counts 25 gr as 3 lb of bow weight)<br><span class="small">${focTxt(pt)}</span></td></tr>
- <tr><th>Cushion plunger</th><td>${weak?'Increase':'Decrease'} spring tension<br><span class="small">FOC unchanged</span></td></tr>
+ ${comp?`<tr><th>Rest left/right</th><td>Move the rest a little ${weak?'toward':'away from'} the weak/stiff reading, or use yoke / cam lean instead (the rest can stay at centre)<br><span class="small">FOC unchanged</span></td></tr>
+ <tr><th>Yoke or cam</th><td>Yoke twists or cam lean, then re-test<br><span class="small">FOC unchanged</span></td></tr>`
+ :`<tr><th>Cushion plunger</th><td>${weak?'Increase':'Decrease'} spring tension<br><span class="small">FOC unchanged</span></td></tr>`}
  <tr><th>Draw weight</th><td>${weak?'Decrease':'Increase'} it slightly, if your bow weight is adjustable<br><span class="small">FOC unchanged (the formula has no draw weight in it)</span></td></tr>
  <tr><th>Cut length</th><td>${weak?`Cut 1/4" shorter (Gold Tip's step), only if the arrow still reaches about 1" past the rest (Easton). A shorter arrow acts stiffer: Easton's chart asks for a weaker spine as length drops.<br><span class="small">${focTxt(ct)}</span>`:`Don't cut: a shorter arrow acts stiffer on Easton's chart. If nothing else works, the chart's answer is a weaker spine.`}</td></tr>
  </tbody></table>${far?`<p class="lab-note" style="margin-top:8px">More than 15 cm (6 in) at ${d} ${m[2]}: Easton says the equipment needs changing to get a good tune, which may mean a ${weak?'stiffer':'weaker'} spine.</p>`:''}
