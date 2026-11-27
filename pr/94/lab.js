@@ -303,15 +303,19 @@ function walkSetupCard(T){const W=T.walk,p=walkRefresh(W),kind=W.kind||'compound
  <div class="lab-note" id="wbdists"><p style="margin:0"><b>Suggested distances:</b> ${h(walkDistLine(p))}</p>
  <p class="small" style="margin:6px 0 0">Sight stays on 10 m. Aim at a dot at the top of the target, with a vertical line down from it. Usable drop used for this estimate: ${h(p.usableCm)} cm (target height minus the bottom quarter and a small top margin).${comp?' To go further, you can use a long-distance sight mark instead, so the arrows drop less.':''}</p></div>
  <button class="btn alt full" id="wbgo" type="button" ${W.dw&&W.height?'':'disabled'}>Start shooting</button></div>`}
-function walkSvg(T){const W=T.walk,H=Math.max(40,+W.height||120),half=H/2,pad=8,top=Math.min(WalkBack.TOP_CM,H*0.08);
+function walkStopLabel(H){const fs=Math.max(3.4,Math.min(4.2,H/18)),avail=Math.max(20,H-10),fits=t=>t.length*fs*0.55<=avail;
+ const text=fits('Bottom quarter — stop if an arrow lands here')?'Bottom quarter — stop if an arrow lands here':fits('Stop if an arrow lands here')?'Stop if an arrow lands here':'Stop zone';
+ return{text,fs}}
+function walkSvg(T){const W=T.walk,H=Math.max(40,+W.height||120),half=H/2,pad=8,top=Math.min(WalkBack.TOP_CM,H*0.08),stop=walkStopLabel(H);
  const vbX=-half-pad,vbY=-pad,vbW=H+2*pad,vbH=H+2*pad;let grid='';
  for(let i=10;i<H;i+=10){grid+=`<path d="M${-half} ${i}h${H}" stroke="var(--tgrid,#cbd5e1)" stroke-width="0.4"/>`;grid+=`<path d="M${-half+i} 0v${H}" stroke="var(--tgrid,#cbd5e1)" stroke-width="0.4"/>`}
  const zone=`<rect x="${-half}" y="${0.75*H}" width="${H}" height="${0.25*H}" fill="#00c8ff" fill-opacity="0.14"/>`;
  const pal=['#1d4ed8','#00c8ff','#0b1f4d'],cols={};(W.distances||[]).forEach((d,i)=>cols[d]=pal[i%3]);
  const marks=(W.shots||[]).map(s=>{const x=Math.max(-half+1,Math.min(half-1,+s.x||0)),y=Math.max(1,Math.min(H-1,+s.y||0)),c=cols[s.d]||'#1d4ed8';
   return s.test?`<polygon points="${x},${y-2.8} ${x+2.5},${y+2} ${x-2.5},${y+2}" fill="${c}" stroke="#fff" stroke-width="0.6"/>`:`<circle cx="${x}" cy="${y}" r="2.3" fill="${c}" stroke="#fff" stroke-width="0.6"/>`}).join('');
- const label=`<text x="${-half+3}" y="${Math.min(H-3,0.75*H-3)}" font-size="4.2" fill="#1d4ed8">Bottom quarter — stop if an arrow lands here</text>`;
- return`<svg class="tface twalk" id="tface" data-lines="v" data-walk="1" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" role="img" aria-label="Walk-back target with a vertical line from a dot at the top. Tap where each arrow landed."><rect x="${-half}" y="0" width="${H}" height="${H}" fill="var(--tbg,#fff)" stroke="#1d4ed8" stroke-width="0.7"/>${grid}${zone}<path d="M0 ${top}V${H}" stroke="#1d4ed8" stroke-width="1.2"/><circle cx="0" cy="${top}" r="2.4" fill="#1d4ed8"/>${marks}${label}</svg>`}
+ const labelY=0.75*H-2.4<stop.fs+2?0.75*H+stop.fs*1.15:0.75*H-2.4;
+ const label=`<text id="wbstoplabel" x="${-half+3}" y="${labelY}" font-size="${stop.fs}" fill="#1d4ed8">${stop.text}</text>`;
+ return`<svg class="tface twalk" id="tface" data-lines="v" data-walk="1" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" role="img" aria-label="Walk-back target with a vertical line from a dot at the top. The shaded bottom quarter is the stop zone. Tap where each arrow landed."><rect x="${-half}" y="0" width="${H}" height="${H}" fill="var(--tbg,#fff)" stroke="#1d4ed8" stroke-width="0.7"/>${grid}${zone}<path d="M0 ${top}V${H}" stroke="#1d4ed8" stroke-width="1.2"/><circle cx="0" cy="${top}" r="2.4" fill="#1d4ed8"/>${marks}${label}</svg>`}
 function walkStats(T){const W=T.walk,rows=(W.distances||[]).map(d=>{const L=WalkBack.byDist(W,d);if(!L.length)return`<tr><th>${d} m</th><td colspan="3" class="muted">No arrows yet</td></tr>`;
   const mx=L.reduce((a,s)=>a+(+s.x||0),0)/L.length,my=L.reduce((a,s)=>a+(+s.y||0),0)/L.length;
   return`<tr><th>${d} m</th><td>${L.length}</td><td>${cm(Math.abs(mx))} cm ${mx>=0?'right':'left'}</td><td>${cm(my)} cm down${WalkBack.inBottomQuarter(my,W.height)?' · bottom quarter':''}</td></tr>`}).join('');

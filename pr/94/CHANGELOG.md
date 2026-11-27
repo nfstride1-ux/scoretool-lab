@@ -4,6 +4,13 @@ Newest first. Each entry names the version tag shown in Settings.
 
 
 
+## v2026-11-27-1951-walkback: Walk back stop-zone label fits on small target faces
+
+- The in-plot “Bottom quarter — stop if an arrow lands here” line no longer clips on smaller bosses at phone width. A 60 cm face (and smaller, including a custom 50 cm) shows “Stop zone”; an 80 cm face shows “Stop if an arrow lands here”; a 120 cm face keeps the full sentence. Preview only — not live until Nathe says go live 94. Cache `v2026-11-27-1951-walkback`.
+
+### Files
+lab.js, test/lab.js, tools/tuning_test.py, index.html, test/index.html, sw.js, version.json, CHANGELOG.md, HANDOFF.md.
+
 ## v2026-11-27-1935-walkback: New Walk back tune, with safe distances from poundage and target size
 
 - Nathe, 27 Nov about 7:19pm Perth: "Go" on the agreed Walk back method (t1243u–t1249u). **Preview only — not live until he says go live N.** Bhutan is not in this change.

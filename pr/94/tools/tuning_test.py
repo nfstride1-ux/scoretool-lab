@@ -334,7 +334,14 @@ try:
             if height in (60,80,100,120):
                 pg.select_option('#wb_h', str(height))
             else:
-                pg.select_option('#wb_h', 'custom'); pg.wait_for_timeout(100); pg.fill('#wb_hcustom', str(height))
+                pg.evaluate("""(h) => {
+                  const t=(S.tune||[]).find(x=>x.id==S._tuneId);
+                  if(t&&t.walk){ t.walk.height=+h; if(typeof save==='function')save(); }
+                  if(typeof render==='function')render();
+                }""", height)
+                pg.wait_for_timeout(250)
+                if pg.locator('#wb_hcustom').is_visible():
+                    pg.fill('#wb_hcustom', str(height))
             pg.locator('#wb_dw').evaluate('e=>e.blur()'); pg.wait_for_timeout(200)
             # Use the agreed default speed estimate (not the saved bow's IBO / draw length)
             pg.evaluate("""() => {
@@ -399,6 +406,21 @@ try:
         tap_face(pg, 0.5, 0.90)
         chk('new walk-back bottom-quarter stop warning', pg.locator('#wbwarn').count()==1 and 'bottom quarter' in pg.inner_text('#wbwarn').lower(), pg.inner_text('#app')[:400])
         shot(pg, 'walkback/24-new-recurve-20-80.png')
+        def stop_box(pg):
+            return pg.evaluate("""() => {
+              const t=document.querySelector('#wbstoplabel'), face=document.querySelector('#tface rect');
+              if(!t||!face) return null;
+              const tb=t.getBBox(), fb=face.getBBox();
+              const pad=0.6;
+              return {text:t.textContent, tw:+tb.width.toFixed(2), tx:+tb.x.toFixed(2), fw:+fb.width.toFixed(2), fx:+fb.x.toFixed(2), ok: tb.x>=fb.x-pad && (tb.x+tb.width)<=(fb.x+fb.width+pad)};
+            }""")
+        for height, part in ((60,'Stop zone'),(80,'Stop if an arrow lands here'),(50,'Stop zone'),(120,'Bottom quarter — stop if an arrow lands here')):
+            start(pg, 'Walk back tune', f'Stop label {height}', bt='r')
+            fill_walk(pg, 'recurve', 30 if height!=80 else 20, height)
+            pg.click('#wbgo'); pg.wait_for_timeout(400)
+            box=stop_box(pg)
+            chk(f'walk-back {height} cm stop label is unclipped at 390px', box and box.get('ok') and box.get('text')==part, box)
+            shot(pg, f'walkback/25-stoplabel-{height}.png')
 
         for fn in ('lab.js','lab.css','tune.js','arrowchooser.js','walkback.js'):
             txt=open(os.path.join(ROOT,fn),encoding='utf-8').read().lower()

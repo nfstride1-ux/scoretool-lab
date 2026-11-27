@@ -4,6 +4,13 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 19:51 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: On branch `cursor/walkback-tune` / PR #94 (cache `v2026-11-27-1951-walkback`). Fixed the in-plot Walk back “bottom quarter” label so it never clips at 390px width. Small faces (about 60 cm and under, including custom 50 cm) say “Stop zone”. Medium faces say “Stop if an arrow lands here”. 120 cm still has the full “Bottom quarter — stop if an arrow lands here”. getBBox tests cover 50, 60, 80 and 120 cm.
+- Tests: tools/walkback_test.js 77/77, tools/tuning_test.py 124/124, tools/tier_gate_test.py 195/195, safety-smoke 15/15, privacy-scan pass.
+- Half-done: Republish lab preview pr/94 and re-check 60/80/120 cm at phone size. Preview only — do not merge until Nathe says “go live 94”. Bhutan is not in this PR.
+
 ## 27 Nov 2026, 19:35 AWST — [Jarvis]
 
 - Who: Jarvis.
