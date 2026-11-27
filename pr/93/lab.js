@@ -59,10 +59,11 @@ home=function(){addMe();let last='';try{const L=latestShoot();if(L)last=`Last sh
  app.innerHTML=`<p class="muted" style="margin:0 0 10px">G'day${nm?' '+h(String(nm).split(' ')[0]):''}${last?' · '+last:''}</p>
  <button class="hub-score" data-go="score"><span aria-hidden="true">🎯</span><span>Score<small>Start or carry on a shoot</small></span></button>
  <button class="hub-score hub-past" id="gocards" data-go="scorecards"><span aria-hidden="true">📋</span><span>Scorecards<small>Practice scores and official personal bests</small></span></button>
+ <button class="hub-score" data-go="lab_bhutan" id="bhutanhome" style="background:#1d4ed8;box-shadow:inset 0 0 0 3px #38e1ff"><span aria-hidden="true">🎯</span><span>Bhutan scoring<small>Datse, Khuru and Degor (test)</small></span></button>
  <div class="hub-grid">
   <button class="hub-tile" data-go="myarch"><span class="i" aria-hidden="true">📓</span><b>My archery</b><small>Stats, PBs, diary, setups, sight marks</small></button>
   <button class="hub-tile" data-go="clubs"><span class="i" aria-hidden="true">👥</span><b>Clubs &amp; leagues</b><small>Squads, leagues, match play, following</small></button>
-  <button class="hub-tile" data-go="tools"><span class="i" aria-hidden="true">🔧</span><b>Tools</b><small>Arrow optimizer, calculators, 3D rules</small></button>
+  <button class="hub-tile" data-go="tools"><span class="i" aria-hidden="true">🔧</span><b>Tools</b><small>Bhutan scoring, arrow optimizer, calculators</small></button>
   <a class="hub-tile" href="https://archerycalendars.com/#/calendar" target="_blank" rel="noopener"><span class="i" aria-hidden="true">📅</span><b>Calendar</b><small>My events on archerycalendars.com ↗</small></a>
  </div>`;bindGo()};
 
@@ -136,7 +137,7 @@ sub('lab_settings','me','Settings & help','lab_me','Me',()=>me(),(e,t)=>['settin
 /* ---------- Tools ---------- */
 LABSEC.tools='tools';
 E.tools=()=>menu('Tools',[
- row('lab_bhutan','🎯','Bhutan scoring (test)','Traditional Datse, Khuru and Degor team scoring'),
+ row('lab_bhutan','🎯','Bhutan scoring','Datse, Khuru and Degor team scoring (test)'),
  row('lab_tune','🎯','Tune helper','Paper, torque, draw weight and spine, cut length, bare shaft, node, creep, Dudley'),
  row('lab_chooser','🏹','Arrow chooser','Starting spine and cut length from the makers\' charts, FOC and point weight'),
  row('lab_rounds','◎','Rounds','Distances and faces when a club names the round'),

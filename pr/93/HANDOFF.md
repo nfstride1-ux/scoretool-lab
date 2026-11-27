@@ -4,6 +4,12 @@ Read this file first, then [PROJECT_RULES.md](PROJECT_RULES.md).
 
 Before you stop, add a signed entry in Australia/Perth time. Say who you are, what is done, what is half-done, what is next, and any decision. Sign with one tag: `[Claude]` `[ChatGPT]` `[OpenAI]` `[Jarvis]` `[Grok Bot]` `[Cursor]`.
 
+## 27 Nov 2026, 10:30 AWST — [Jarvis]
+
+- Who: Jarvis.
+- Done: Nathe could not find Bhutan in the PR #93 "test app". The Tools row was already in root `lab.js` (not `app.js`, which is why a grep of app.js was empty), but `/test/` is a separate older copy. `test/lab.js` had no Bhutan row, and `test/` had no `bhutan.html`. Added a clear **Bhutan scoring** button at the top of Tools, a matching Home button, and the same on `/test/`. Copied `bhutan.html` / `bhutan.js` / `bhutan_score.js` into `/test/`. Cache `v2026-11-27-1030-bhutantools` (test app `v2026-11-27-1030-bhutantools-test`).
+- Half-done: PR only, not merged. Needs Nathe's "go". Lab preview pr/93 to be republished after this commit.
+
 ## 27 Nov 2026, 08:52 AWST — [Jarvis]
 
 - Who: Jarvis.
